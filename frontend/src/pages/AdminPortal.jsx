@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ShoppingBag, FileText, Star, Users, Settings,
   LogOut, Plus, Edit, Trash2, Eye, EyeOff, Lock, ChevronRight, Upload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // ── Admin Login ────────────────────────────────────────────────
 function AdminLogin({ onLogin }) {
@@ -17,12 +19,33 @@ function AdminLogin({ onLogin }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1000));
-    // Demo credentials
-    if (form.email === 'admin@ehs.com' && form.password === 'admin123') {
-      onLogin({ name: 'Admin', email: form.email, role: 'admin' });
-    } else {
-      setError('Invalid credentials. Try admin@ehs.com / admin123');
+    
+    try {
+      const response = await fetch(`${API_URL}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.message || 'Login failed. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Store token and call onLogin with admin data
+      localStorage.setItem('admin_token', data.token);
+      onLogin({ 
+        name: data.admin.name, 
+        email: data.admin.email, 
+        id: data.admin.id,
+        role: 'admin' 
+      });
+    } catch (err) {
+      setError('Server connection error. Please try again.');
+      console.error('Login error:', err);
     }
     setLoading(false);
   };
@@ -55,7 +78,7 @@ function AdminLogin({ onLogin }) {
               required
               className="w-full bg-white/5 border rounded-2xl px-5 py-3.5 text-sm text-cream placeholder-cream/20 focus:outline-none focus:border-gold/50 transition-colors"
               style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-              placeholder="admin@ehs.com"
+              placeholder="admin email"
             />
           </div>
           <div className="relative">
@@ -344,10 +367,64 @@ function AdminDashboard({ user, onLogout }) {
 // ── Page Export ──────────────────────────────────────────────────
 export default function AdminPortal() {
   const { user, login, logout, isAdmin } = useAuth();
+  const [adminUser, setAdminUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!user || !isAdmin) {
-    return <AdminLogin onLogin={(data) => login({ ...data, role: 'admin' })} />;
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const token = localStorage.getItem('admin_token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/admin/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAdminUser(data.admin);
+          login({ ...data.admin, role: 'admin' });
+        } else {
+          localStorage.removeItem('admin_token');
+        }
+      } catch (err) {
+        console.error('Error checking admin status:', err);
+        localStorage.removeItem('admin_token');
+      }
+      setLoading(false);
+    };
+
+    checkAdminStatus();
+  }, [login]);
+
+  const handleAdminLogin = (data) => {
+    setAdminUser(data);
+    login(data);
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('admin_token');
+    setAdminUser(null);
+    logout();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-espresso/20 border-t-espresso rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  return <AdminDashboard user={user} onLogout={logout} />;
+  if (!adminUser && (!user || !isAdmin)) {
+    return <AdminLogin onLogin={handleAdminLogin} />;
+  }
+
+  return <AdminDashboard user={adminUser || user} onLogout={handleAdminLogout} />;
 }

@@ -51,7 +51,7 @@ const stories = [
     title: 'Stepped Into My Purpose Fully',
     name: 'Priya M.',
     description:
-      'For years I felt a pull but no direction. Working through the Academy courses helped me articulate and commit to my life's work. The clarity I gained is priceless.',
+      'For years I felt a pull but no direction. Working through the Academy courses helped me articulate and commit to my life\'s work. The clarity I gained is priceless.',
     tag: 'Purpose',
     rating: 5,
     img: 'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?w=400&auto=format&fit=crop&q=60',
