@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUpRight, Clock, BookOpen, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import ConfirmDeleteModal from '../components/common/ConfirmDeleteModal'; // (see below)
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const courses = [
   {
@@ -55,7 +60,35 @@ const courses = [
 ];
 
 export default function Academy() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [deleteId, setDeleteId] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    axios.get(`${API_URL}/courses`)
+      .then(res => { setCourses(res.data.courses); setLoading(false); })
+      .catch(() => { setError('Failed to load'); setLoading(false); });
+  }, []);
+
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      await axios.delete(`${API_URL}/courses/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCourses(prev => prev.filter(c => c._id !== id));
+      setDeleteId(null);
+    } catch {
+      setError('Failed to delete');
+    }
+  };
+
+  const handleCourseClick = (courseId) => {
+    navigate(`/academy/${courseId}`);
+  };
 
   return (
     <main className="pt-20 overflow-hidden">
@@ -137,13 +170,14 @@ export default function Academy() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: (i % 2) * 0.1, duration: 0.6 }}
-                className="rounded-luxury luxury-border bg-white overflow-hidden group"
+                className="rounded-luxury luxury-border bg-white overflow-hidden group hover:shadow-luxury-md transition-shadow duration-300 h-full cursor-pointer"
+                onClick={() => handleCourseClick(course.id)}
               >
                 <div className="overflow-hidden aspect-video">
                   <img
                     src={course.img}
                     alt={course.title}
-                    className="w-full h-full object-cover img-sepia"
+                    className="w-full h-full object-cover img-sepia group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <div className="p-8">
@@ -169,18 +203,15 @@ export default function Academy() {
                     >
                       ${course.price}
                     </span>
-                    {course.purchased ? (
-                      <Link
-                        to={`/academy/${course.id}`}
-                        className="flex items-center gap-2 bg-espresso text-cream px-6 py-2.5 rounded-full text-sm hover:bg-gold hover:text-espresso transition-all duration-300"
-                      >
-                        Continue <ArrowUpRight size={14} />
-                      </Link>
-                    ) : (
-                      <button className="flex items-center gap-2 bg-espresso text-cream px-6 py-2.5 rounded-full text-sm hover:bg-gold hover:text-espresso transition-all duration-300">
-                        Enroll Now <ArrowUpRight size={14} />
-                      </button>
-                    )}
+                    <div 
+                      className="flex items-center gap-2 bg-espresso text-cream px-6 py-2.5 rounded-full text-sm group-hover:bg-gold group-hover:text-espresso transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCourseClick(course.id);
+                      }}
+                    >
+                      {course.purchased ? 'Continue' : 'Enroll Now'} <ArrowUpRight size={14} />
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -188,6 +219,20 @@ export default function Academy() {
           </div>
         </div>
       </section>
+
+      {/* Delete Confirmation Modal */}
+      {isAdmin && (
+        <>
+          {deleteId && (
+            <ConfirmDeleteModal
+              isOpen={deleteId !== null}
+              onConfirm={() => handleDelete(deleteId)}
+              onCancel={() => setDeleteId(null)}
+              itemName={courses.find(c => c._id === deleteId)?.title}
+            />
+          )}
+        </>
+      )}
     </main>
   );
 }

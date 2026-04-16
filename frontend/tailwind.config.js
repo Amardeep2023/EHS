@@ -10,10 +10,21 @@ export default {
         secondary: '#8c8279',
         'cream-2': '#fdfcf9',
         'cream-3': '#f5f1e8',
+        // Luxury Coastal Palette
+        'bluebird': '#4D84CF',
+        'azurea': '#A0C4FF',
+        'miel': '#FFE4A8',
+        'butter': '#EEE4BB',
+        'royal-green': '#4B6A4A',
+        'military-green': '#3B4D3B',
+        'sage': '#9DB2A2',
       },
       fontFamily: {
         boska: ['Boska', 'Georgia', 'serif'],
         jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
+        braven: ['Braven', 'serif'],
+        anko: ['Anko', 'serif'],
+        opensans: ['"Open Sans"', 'sans-serif'],
       },
       borderRadius: {
         luxury: '2rem',

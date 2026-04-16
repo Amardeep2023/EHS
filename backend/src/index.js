@@ -1,6 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import courseRoutes from './routes/course.routes.js';
@@ -10,19 +15,21 @@ import storyRoutes from './routes/story.routes.js';
 import consultationRoutes from './routes/consultation.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
-dotenv.config();
-
 // ── Connect to MongoDB ─────────────────────────────────────────
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // ── Middleware ─────────────────────────────────────────────────
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
+app.use(cookieParser());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ── Routes ─────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -31,6 +38,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/consultations', consultationRoutes);
+
 app.use('/api/admin', adminRoutes);
 
 // ── Health check ────────────────────────────────────────────────

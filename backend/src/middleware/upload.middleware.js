@@ -1,38 +1,75 @@
-import multer from 'multer';
-import path from 'path';
+import { Router } from 'express';
+import { protect, adminOnly } from '../middleware/auth.middleware.js';
+import { uploadResource } from '../middleware/upload.middleware.js';
+import Resource from '../models/Resource.model.js';
 
-function storage(destination) {
-  return multer.diskStorage({
-    destination: (req, file, cb) => cb(null, destination),
-    filename: (req, file, cb) => {
-      const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      cb(null, `${unique}${path.extname(file.originalname)}`);
-    },
-  });
-}
+const router = Router();
 
-const fileFilter = (allowedTypes) => (req, file, cb) => {
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error(`Only ${allowedTypes.join(', ')} files are allowed`), false);
+// POST /api/resources/upload — admin uploads a PDF
+router.post(
+  '/upload',
+  protect,
+  adminOnly,
+  uploadResource.single('file'),   // uses your shared uploadResource multer config
+  async (req, res) => {
+    try {
+      const { title, description, type, category } = req.body;
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded.' });
+      }
+      if (!title || !description) {
+        return res.status(400).json({ success: false, message: 'Title and description are required.' });
+      }
+
+      const fileUrl = `/uploads/resources/${req.file.filename}`;
+
+      const resource = await Resource.create({
+        title,
+        description,
+        type: type || 'PDF',
+        category: category || 'Beginner Guides',
+        fileUrl,
+        isPublished: true,
+      });
+
+      res.status(201).json({ success: true, resource });
+    } catch (err) {
+      // Multer errors (wrong file type, size limit) arrive here
+      res.status(500).json({ success: false, message: err.message });
+    }
   }
-};
+);
 
-export const uploadCourse = multer({
-  storage: storage('uploads/courses'),
-  fileFilter: fileFilter(['video/mp4', 'video/webm', 'image/jpeg', 'image/png']),
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+// GET /api/resources — public, returns published resources
+router.get('/', async (req, res) => {
+  try {
+    const { category } = req.query;
+    const filter = { isPublished: true };
+    if (category) filter.category = category;
+    const resources = await Resource.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, resources });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-export const uploadProduct = multer({
-  storage: storage('uploads/products'),
-  fileFilter: fileFilter(['application/pdf', 'image/jpeg', 'image/png']),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+router.put('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const resource = await Resource.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, resource });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-export const uploadResource = multer({
-  storage: storage('uploads/resources'),
-  fileFilter: fileFilter(['application/pdf', 'video/mp4', 'image/jpeg', 'image/png']),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    await Resource.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
+
+export default router;

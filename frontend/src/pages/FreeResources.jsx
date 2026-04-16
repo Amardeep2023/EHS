@@ -1,66 +1,82 @@
 import { motion } from 'framer-motion';
 import { Download, Play, ArrowUpRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const categories = ['All', 'Beginner Guides', 'Quick Practices', 'Challenges', 'Videos'];
 
-const resources = [
-  {
-    title: 'Manifestation Starter Guide',
-    description: 'A comprehensive introduction to the principles of conscious creation and how to apply them daily.',
-    type: 'PDF',
-    category: 'Beginner Guides',
-    pages: '24 pages',
-    file: '#',
-  },
-  {
-    title: 'Morning Alignment Ritual',
-    description: 'A 10-minute guided video practice to align your energy with intention before each day begins.',
-    type: 'Video',
-    category: 'Videos',
-    duration: '10 min',
-    file: '#',
-  },
-  {
-    title: '7-Day Mindset Reset',
-    description: 'A structured 7-day guide with daily prompts, affirmations, and reflection exercises.',
-    type: 'PDF',
-    category: 'Challenges',
-    pages: '18 pages',
-    file: '#',
-  },
-  {
-    title: 'Understanding the Law of Attraction',
-    description: 'A clear, evidence-based exploration of how your thoughts and energy shape your reality.',
-    type: 'PDF',
-    category: 'Beginner Guides',
-    pages: '16 pages',
-    file: '#',
-  },
-  {
-    title: '5-Minute Breathwork Practice',
-    description: 'A calming breathwork video to reduce resistance and open yourself to receiving.',
-    type: 'Video',
-    category: 'Quick Practices',
-    duration: '5 min',
-    file: '#',
-  },
-  {
-    title: 'Abundance Affirmations Pack',
-    description: '50 carefully crafted affirmations for wealth, love, health, and purpose.',
-    type: 'PDF',
-    category: 'Quick Practices',
-    pages: '8 pages',
-    file: '#',
-  },
-];
-
 export default function FreeResources() {
   const [activeCategory, setActiveCategory] = useState('All');
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  const fetchResources = async () => {
+    try {
+      const res = await fetch(`${API_URL}/resources`);
+      const data = await res.json();
+      if (data.success) {
+        setResources(data.resources);
+      }
+    } catch (err) {
+      console.error('Failed to fetch resources:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = activeCategory === 'All'
     ? resources
     : resources.filter((r) => r.category === activeCategory);
+
+  // Helper function to get full file URL
+  const getFileUrl = (fileUrl) => {
+    return `${API_URL.replace('/api', '')}${fileUrl}`;
+  };
+
+  const getDownloadName = (resource) => {
+    const safeTitle = (resource?.title || 'resource')
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return `${safeTitle || 'resource'}.pdf`;
+  };
+
+  const handleDownload = async (e, resource) => {
+    e.preventDefault();
+    try {
+      const fileUrl = getFileUrl(resource.fileUrl);
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = getDownloadName(resource);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
+  // Helper function to format date
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   return (
     <main className="pt-20 overflow-hidden">
@@ -115,52 +131,66 @@ export default function FreeResources() {
 
       {/* Grid */}
       <section className="pb-28 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((r, i) => (
-            <motion.div
-              key={r.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07, duration: 0.5 }}
-              whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(42,34,25,0.06)' }}
-              className="p-8 rounded-luxury luxury-border bg-white group cursor-pointer"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-label text-gold">{r.category}</span>
-                <span
-                  className="text-xs font-medium px-3 py-1 rounded-full"
-                  style={{
-                    background: r.type === 'PDF' ? 'rgba(212,165,116,0.12)' : 'rgba(42,34,25,0.06)',
-                    color: '#d4a574',
-                  }}
-                >
-                  {r.type}
-                </span>
-              </div>
-              <h3
-                className="font-boska text-2xl text-espresso mb-3"
-                style={{ fontFamily: 'Boska, Georgia, serif' }}
+        {loading ? (
+          <div className="max-w-7xl mx-auto text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gold border-t-transparent"></div>
+            <p className="text-secondary mt-4">Loading resources...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="max-w-7xl mx-auto text-center py-20">
+            <p className="text-secondary text-lg">No resources found in this category.</p>
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((r, i) => (
+              <motion.div
+                key={r._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07, duration: 0.5 }}
+                whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(42,34,25,0.06)' }}
+                className="p-8 rounded-luxury luxury-border bg-white group"
               >
-                {r.title}
-              </h3>
-              <p className="text-sm text-secondary leading-relaxed mb-6">{r.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-espresso/40">{r.pages || r.duration}</span>
-                <a
-                  href={r.file}
-                  className="flex items-center gap-2 text-sm font-medium text-gold hover:text-espresso transition-colors"
-                  onClick={(e) => e.preventDefault()}
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-label text-gold">{r.category}</span>
+                  <span
+                    className="text-xs font-medium px-3 py-1 rounded-full"
+                    style={{
+                      background: r.type === 'PDF' ? 'rgba(212,165,116,0.12)' : 'rgba(42,34,25,0.06)',
+                      color: '#d4a574',
+                    }}
+                  >
+                    {r.type}
+                  </span>
+                </div>
+                <h3
+                  className="font-boska text-2xl text-espresso mb-3"
+                  style={{ fontFamily: 'Boska, Georgia, serif' }}
                 >
-                  {r.type === 'Video' ? (
-                    <><Play size={14} /> Watch</>
-                  ) : (
-                    <><Download size={14} /> Download</>
-                  )}
-                </a>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                  {r.title}
+                </h3>
+                <p className="text-sm text-secondary leading-relaxed mb-4">{r.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-espresso/40">
+                    {formatDate(r.createdAt)}
+                  </span>
+                  <a
+                    href={getFileUrl(r.fileUrl)}
+                    onClick={(e) => handleDownload(e, r)}
+                    className="flex items-center gap-2 text-sm font-medium text-gold hover:text-espresso transition-colors"
+                    download={getDownloadName(r)}
+                  >
+                    {r.type === 'Video' ? (
+                      <><Play size={14} /> Watch</>
+                    ) : (
+                      <><Download size={14} /> Download</>
+                    )}
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

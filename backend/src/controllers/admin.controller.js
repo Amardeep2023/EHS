@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import Admin from '../models/Admin.model.js';
 
 function signToken(id) {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  return jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   });
 }
 

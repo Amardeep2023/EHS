@@ -1,429 +1,413 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Star, BookOpen, ShoppingBag, Calendar, ChevronDown } from 'lucide-react';
-import EchoText from '../components/common/EchoText';
-import LuxuryCard from '../components/common/LuxuryCard';
+import Navbar from "../components/layout/Navbar";
+import { 
+  Instagram, 
+  Youtube, 
+  ArrowUpRight, 
+  X, 
+  Play, 
+  Pause, 
+  ShoppingCart, 
+  Menu, 
+  Sun, 
+  ArrowDown, 
+  Mail 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import logoehs from '../assets/logoehs.png';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] } },
-};
-
-function Section({ children, className = '' }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-  return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-const featuredCourses = [
+const manifestationVideos = [
   {
-    label: 'Foundation',
-    title: 'Manifestation Mastery',
-    description: 'A complete 8-week journey into the science and art of conscious creation.',
-    price: '$197',
-    img: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&auto=format&fit=crop&q=60',
+    id: 'video-1',
+    title: 'Quantum Jumping 101',
+    desc: 'How to shift your vibration to align with your highest timeline instantly.',
+    img: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=60',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-stars-in-the-night-sky-background-9130-large.mp4'
   },
   {
-    label: 'Advanced',
-    title: 'Quantum Alignment',
-    description: 'Elevate your vibration and align with your highest timeline.',
-    price: '$297',
-    img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=60',
+    id: 'video-2',
+    title: 'The Law of Assumption',
+    desc: 'Mastering the feeling of the wish fulfilled to collapse time.',
+    img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800&auto=format&fit=crop&q=60',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-ocean-at-sunset-4231-large.mp4'
   },
   {
-    label: 'Deep Dive',
-    title: 'Soul Purpose Blueprint',
-    description: 'Uncover and embody your unique soul mission with clarity.',
-    price: '$347',
-    img: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop&q=60',
+    id: 'video-3',
+    title: 'Manifesting Abundance',
+    desc: 'Release scarcity blocks and open the portal to infinite supply.',
+    img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=60',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-white-sand-beach-and-palm-trees-1564-large.mp4'
   },
-];
-
-const testimonials = [
-  {
-    name: 'Amara K.',
-    story: 'Within 3 months of practicing these techniques, I manifested my dream job and a new home. The guidance here transformed every area of my life.',
-    rating: 5,
-  },
-  {
-    name: 'Sophia R.',
-    story: 'The academy courses gave me tools I use daily. My mindset shifted completely — I feel aligned and at peace for the first time.',
-    rating: 5,
-  },
-  {
-    name: 'Jasmine T.',
-    story: 'The personal consultation was a turning point. I was heard, guided, and given a roadmap that actually works.',
-    rating: 5,
-  },
-];
-
-const process = [
-  { step: '01', title: 'Discover', text: 'Explore free resources and begin your journey at your own pace.' },
-  { step: '02', title: 'Learn', text: 'Enroll in curated courses designed to shift your reality from the inside out.' },
-  { step: '03', title: 'Integrate', text: 'Apply proven practices with digital tools, journals, and workbooks.' },
-  { step: '04', title: 'Transform', text: 'Embody your highest self and create the life you truly desire.' },
 ];
 
 export default function Home() {
-  return (
-    <main className="overflow-hidden">
-      {/* ── Hero ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-label text-gold mb-6"
-        >
-          Applied Intelligence for the Soul
-        </motion.p>
+  const [activeVideo, setActiveVideo] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(true);
 
-        <div className="relative flex justify-center mb-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <EchoText text="Embrace" />
-          </motion.div>
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    const videoElement = document.getElementById('reel-video');
+    if (videoElement) {
+      if (isPlaying) {
+        videoElement.pause();
+      } else {
+        videoElement.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <div className="min-h-screen relative font-satoshi bg-white/10 text-[#3E2928] overflow-x-hidden">
+      {/* Global background is now in App.jsx */}
+
+      {/* Navigation */}
+      
+      {/* <nav className="fixed top-0 w-full z-50 bg-[#E3F2FD]/80 backdrop-blur-md border-b border-[#3E2928]/20">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 rounded-full border border-[#D4AF37] flex items-center justify-center">
+              <span className="font-serif text-lg font-bold text-[#D4AF37]">EHS</span>
+            </div>
+            <span className="font-serif text-xl tracking-tight hidden md:block text-[#3E2928]">Embracing Higher Self</span>
+          </div>
+          <div className="hidden md:flex items-center space-x-6 lg:space-x-8 text-[10px] lg:text-xs uppercase tracking-[0.2em] font-medium">
+            <Link to="/" className="hover:text-[#D4AF37] transition-colors">Home</Link>
+            <Link to="/about" className="hover:text-[#D4AF37] transition-colors">About Us</Link>
+            <Link to="/academy" className="hover:text-[#D4AF37] transition-colors">Courses</Link>
+            <Link to="/testimonials" className="hover:text-[#D4AF37] transition-colors">Testimonials</Link>
+            <Link to="/community" className="hover:text-[#D4AF37] transition-colors">Community</Link>
+            <div className="flex items-center space-x-3 ml-2 lg:ml-4">
+              <a href="#" className="w-9 h-9 flex items-center justify-center border border-[#3E2928]/30 text-[#3E2928] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all">
+                <ShoppingCart className="w-4 h-4" />
+              </a>
+              <Link to="/consultation" className="px-4 py-2 border border-[#3E2928]/30 text-[#3E2928] rounded-full hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all whitespace-nowrap">Book a Session</Link>
+              <Link to="/academy" className="px-5 py-2 bg-[#3E2928] text-white rounded-full hover:bg-[#D4AF37] transition-all whitespace-nowrap">Join Us</Link>
+            </div>
+          </div>
+          <button className="md:hidden text-[#3E2928]">
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
+      </nav> */}
+
+      {/* Hero Section */}
+      <section className="relative pt-10 pb-32 px-6 flex flex-col items-center text-center overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#E3F2FD]/50 via-transparent to-[#E3F2FD]"></div>
+          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#B4D4E8] blur-[150px] rounded-full opacity-30"></div>
+          <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-[#3E2928] blur-[180px] rounded-full opacity-40"></div>
         </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.7 }}
-          className="max-w-md text-center text-secondary leading-relaxed mb-10"
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="flex flex-col items-center w-full max-w-7xl"
         >
-          Your sanctuary for manifestation, conscious growth, and living in alignment with your highest self.
-        </motion.p>
+          <div className="relative w-96 h-96 md:w-96 md:h-96 mb-10 warm-glow">
+            <div className="w-full h-full rounded-full  overflow-hidden p-1  backdrop-blur-sm">
+              <img 
+                src={logoehs} 
+                alt="Embracing Higher Self Logo" 
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            {/* <div className="absolute -top-4 -right-4 w-12 h-12 bg-white/40 backdrop-blur-md rounded-full border border-[#3E2928]/20 flex items-center justify-center shadow-lg">
+              <Sun className="text-[#D4AF37] w-6 h-6" />
+            </div> */}
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="flex flex-wrap gap-3 justify-center"
-        >
-          <Link
-            to="/academy"
-            className="flex items-center gap-2 bg-espresso text-cream px-7 py-3.5 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300"
-          >
-            Explore Courses <ArrowUpRight size={16} />
-          </Link>
-          <Link
-            to="/free-resources"
-            className="flex items-center gap-2 luxury-border bg-transparent text-espresso px-7 py-3.5 rounded-full text-sm font-medium hover:bg-espresso hover:text-cream transition-all duration-300"
-          >
-            Free Resources
-          </Link>
-          <Link
-            to="/shop"
-            className="flex items-center gap-2 luxury-border bg-transparent text-espresso px-7 py-3.5 rounded-full text-sm font-medium hover:bg-espresso hover:text-cream transition-all duration-300"
-          >
-            Shop Now
-          </Link>
-        </motion.div>
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-none tracking-tight text-[#3E2928] mb-6">
+            Embracing Higher Self
+          </h1>
 
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-10 left-10 flex items-center gap-3"
-        >
-          <div className="w-px h-16 bg-espresso/20" />
-          <span className="text-label text-espresso/40" style={{ writingMode: 'vertical-rl', fontSize: '10px' }}>
-            SCROLL
-          </span>
+          <p className="max-w-xl text-sm md:text-base text-[#3E2928]/70 uppercase tracking-[0.4em] mb-12">
+            Discover the light within your signature essence
+          </p>
+
+          <p className="max-w-2xl text-lg md:text-xl text-[#3E2928]/80 leading-relaxed mb-12 font-light italic">
+            A sun-drenched sanctuary for seekers of the sublime. <br className="hidden md:block"/>
+            Journey through the golden hour of your soul to manifest your destiny.
+          </p>
+
+          <div className="flex flex-col items-center space-y-6">
+            <Link to="/academy" className="px-14 py-5 bg-[#3E2928] text-white rounded-full font-bold tracking-[0.2em] uppercase text-sm hover:scale-105 transition-transform shadow-xl">
+              Enter the Sanctuary
+            </Link>
+            <Link to="/about" className="text-xs uppercase tracking-widest border-b border-[#3E2928]/20 pb-1 hover:border-[#D4AF37] transition-all">
+              Learn More <ArrowUpRight className="ml-1 inline-block w-3 h-3" />
+            </Link>
+          </div>
+          
+          <div className="mt-24">
+            <ArrowDown className="w-6 h-6 animate-bounce text-[#3E2928]/30" />
+          </div>
         </motion.div>
       </section>
 
-      {/* ── Process / How It Works ── */}
-      <section className="py-28 bg-gradient-section">
-        <div className="max-w-7xl mx-auto px-6">
-          <Section>
-            <motion.p variants={fadeUp} className="text-label text-gold text-center mb-3">
-              How It Works
-            </motion.p>
-            <motion.h2
-              variants={fadeUp}
-              className="font-boska text-5xl text-center text-espresso mb-20"
-              style={{ fontFamily: 'Boska, Georgia, serif' }}
-            >
-              Your Path to Transformation
-            </motion.h2>
-          </Section>
+      {/* Ticker Section */}
+      <div className="py-10 bg-[#3E2928]/20 border-y border-[#3E2928]/20 overflow-hidden whitespace-nowrap">
+        <div className="inline-block animate-scroll">
+          {[1, 2].map((i) => (
+            <span key={i}>
+              <span className="font-serif text-2xl mx-12 italic opacity-40">Sacred Alignment</span>
+              <span className="mx-12 font-bold opacity-10">*</span>
+              <span className="font-serif text-2xl mx-12 italic opacity-40">Divine Essence</span>
+              <span className="mx-12 font-bold opacity-10">*</span>
+              <span className="font-serif text-2xl mx-12 italic opacity-40">Manifestation Mastery</span>
+              <span className="mx-12 font-bold opacity-10">*</span>
+              <span className="font-serif text-2xl mx-12 italic opacity-40">Soul Evolution</span>
+              <span className="mx-12 font-bold opacity-10">*</span>
+            </span>
+          ))}
+        </div>
+      </div>
 
-          <div className="relative">
-            {/* Connecting line */}
-            <div
-              className="hidden md:block absolute top-7 left-0 right-0 h-px"
-              style={{ background: 'rgba(42,34,25,0.15)', top: '28px' }}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {process.map((step, i) => (
-                <motion.div
-                  key={step.step}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.6 }}
-                  whileHover={{ backgroundColor: '#ffffff', boxShadow: '0 20px 40px rgba(42,34,25,0.06)' }}
-                  className="rounded-luxury p-8 transition-all duration-300"
-                  style={{ background: 'rgba(253,252,249,0.5)' }}
-                >
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center mb-6 luxury-border"
-                    style={{ background: '#faf8f3' }}
-                  >
-                    <span
-                      className="font-boska text-lg text-gold"
-                      style={{ fontFamily: 'Boska, Georgia, serif' }}
-                    >
-                      {step.step}
-                    </span>
-                  </div>
-                  <h3
-                    className="font-boska text-2xl text-espresso mb-3"
-                    style={{ fontFamily: 'Boska, Georgia, serif' }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p className="text-sm text-secondary leading-relaxed">{step.text}</p>
-                </motion.div>
-              ))}
+      {/* The Essence Section */}
+      <section className="py-32 px-6 bg-[#E3F2FD]/80 backdrop-blur-md relative">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+          <div className="order-2 md:order-1">
+            <div className="oval-frame bg-[#B4D4E8]/20 p-4 border border-[#B4D4E8]/30">
+              <img 
+                src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1000" 
+                alt="Spiritual practice" 
+                className="w-full h-full object-cover rounded-[999px]"
+              />
+            </div>
+          </div>
+          <div className="order-1 md:order-2 space-y-8">
+            <div className="text-[#D4AF37] text-xs uppercase tracking-[0.5em] font-bold">The Philosophy</div>
+            <h2 className="font-serif text-4xl md:text-6xl text-[#3E2928] leading-tight">
+              What is Embracing<br/><span className="italic font-light">Higher Self?</span>
+            </h2>
+            <p className="text-xl text-[#3E2928]/70 leading-relaxed font-light">
+              It is more than a platform—it is a warm embrace for your subconscious. We blend editorial elegance with ancient frequency to help you curate a life of pure resonance.
+            </p>
+            <div className="pt-4">
+              <div className="h-px w-24 bg-[#D4AF37]"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Featured Free Content ── */}
-      <section className="py-28">
-        <div className="max-w-7xl mx-auto px-6">
-          <Section>
-            <motion.p variants={fadeUp} className="text-label text-gold mb-3">
-              Free Resources
-            </motion.p>
-            <motion.h2
-              variants={fadeUp}
-              className="font-boska text-5xl text-espresso mb-4"
-              style={{ fontFamily: 'Boska, Georgia, serif' }}
-            >
-              Begin Your Journey — Free
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-secondary mb-12 max-w-xl">
-              Access introductory content, beginner guides, and transformational practices at no cost.
-            </motion.p>
-          </Section>
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {[
-              { title: 'Manifestation Starter Guide', type: 'PDF', tag: 'Beginner' },
-              { title: 'Morning Alignment Ritual', type: 'Video', tag: 'Practice' },
-              { title: '7-Day Mindset Reset', type: 'PDF', tag: 'Challenge' },
-            ].map((r, i) => (
-              <motion.div
-                key={r.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -4 }}
-                className="p-8 rounded-luxury luxury-border bg-white/60 group cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <span className="text-label text-gold">{r.tag}</span>
-                  <span
-                    className="text-xs font-medium px-3 py-1 rounded-full"
-                    style={{ background: r.type === 'PDF' ? 'rgba(212,165,116,0.15)' : 'rgba(42,34,25,0.06)', color: '#d4a574' }}
-                  >
-                    {r.type}
-                  </span>
-                </div>
-                <h4
-                  className="font-boska text-xl text-espresso mb-3"
-                  style={{ fontFamily: 'Boska, Georgia, serif' }}
-                >
-                  {r.title}
-                </h4>
-                <div className="flex items-center gap-1 text-gold text-sm font-medium group-hover:gap-2 transition-all">
-                  Access Free <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <Link
-            to="/free-resources"
-            className="text-nav text-espresso/60 hover:text-espresso transition-colors flex items-center gap-2"
-          >
-            View All Resources <ArrowUpRight size={14} />
-          </Link>
+      {/* Meet Your Guides */}
+      <section className="py-32 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col items-center mb-24 text-center">
+          <h2 className="font-serif text-5xl md:text-7xl text-[#3E2928] mb-6">
+            Meet Your <span className="text-[#D4AF37] italic">Guides</span>
+          </h2>
+          <p className="max-w-lg text-[#3E2928]/50 uppercase tracking-[0.4em] text-xs">Artisans of the soul's signature scent</p>
         </div>
-      </section>
-
-      {/* ── Featured Courses ── */}
-      <section className="py-28 bg-gradient-section">
-        <div className="max-w-7xl mx-auto px-6">
-          <Section>
-            <motion.p variants={fadeUp} className="text-label text-gold mb-3">
-              The Academy
-            </motion.p>
-            <motion.h2
-              variants={fadeUp}
-              className="font-boska text-5xl text-espresso mb-16"
-              style={{ fontFamily: 'Boska, Georgia, serif' }}
-            >
-              Courses for Deep Transformation
-            </motion.h2>
-          </Section>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {featuredCourses.map((course, i) => (
-              <motion.div
-                key={course.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.6 }}
-                className="group rounded-luxury overflow-hidden luxury-border bg-white cursor-pointer"
-                whileHover={{ y: -6 }}
-              >
-                <div className="overflow-hidden aspect-video">
-                  <img
-                    src={course.img}
-                    alt={course.title}
-                    className="w-full h-full object-cover img-sepia"
-                  />
-                </div>
-                <div className="p-8">
-                  <p className="text-label text-gold mb-3">{course.label}</p>
-                  <h3
-                    className="font-boska text-2xl text-espresso mb-2"
-                    style={{ fontFamily: 'Boska, Georgia, serif' }}
-                  >
-                    {course.title}
-                  </h3>
-                  <p className="text-sm text-secondary mb-6 leading-relaxed">{course.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-boska text-xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>
-                      {course.price}
-                    </span>
-                    <div className="flex items-center gap-1 text-sm text-gold font-medium group-hover:gap-2 transition-all">
-                      Enroll <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <Link
-            to="/academy"
-            className="text-nav text-espresso/60 hover:text-espresso transition-colors flex items-center gap-2"
+        
+        <div className="grid md:grid-cols-2 gap-12 lg:gap-24">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="group cursor-pointer"
           >
-            Browse All Courses <ArrowUpRight size={14} />
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="py-28">
-        <div className="max-w-7xl mx-auto px-6">
-          <Section>
-            <motion.p variants={fadeUp} className="text-label text-gold mb-3">
-              Success Stories
-            </motion.p>
-            <motion.h2
-              variants={fadeUp}
-              className="font-boska text-5xl text-espresso mb-16"
-              style={{ fontFamily: 'Boska, Georgia, serif' }}
-            >
-              Lives Transformed
-            </motion.h2>
-          </Section>
-          <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="p-8 rounded-luxury luxury-border bg-white/60"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} size={13} fill="#d4a574" className="text-gold" />
-                  ))}
-                </div>
-                <p className="text-secondary text-sm leading-relaxed mb-6 italic">"{t.story}"</p>
-                <p className="font-boska text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>
-                  — {t.name}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-          <Link
-            to="/success-stories"
-            className="text-nav text-espresso/60 hover:text-espresso transition-colors flex items-center gap-2"
+            <div className="w-full aspect-[3/4] rounded-[150px] overflow-hidden mb-10 transition-transform duration-700 shadow-2xl relative">
+              <img 
+                src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&q=80&w=800" 
+                alt="Clara" 
+                className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3E2928]/30 via-transparent to-transparent"></div>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="font-serif text-3xl text-[#3E2928]">Clara Nightingale</h3>
+              <p className="text-sm uppercase tracking-widest text-[#D4AF37]">Master of Frequency</p>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="group cursor-pointer"
           >
-            Read More Stories <ArrowUpRight size={14} />
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Consultation CTA ── */}
-      <section className="py-28 bg-espresso">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-label text-gold mb-4"
-          >
-            Personal Consultation
-          </motion.p>
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="font-boska text-5xl md:text-6xl text-cream mb-6"
-            style={{ fontFamily: 'Boska, Georgia, serif' }}
-          >
-            Work With Me, One-on-One
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-cream/50 mb-10 leading-relaxed"
-          >
-            Experience a deeply personalised session tailored to your unique journey, challenges, and highest aspirations.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-          >
-            <Link
-              to="/consultation"
-              className="inline-flex items-center gap-2 bg-gold text-espresso px-8 py-4 rounded-full font-medium hover:bg-cream transition-all duration-300"
-            >
-              Book a Session <Calendar size={16} />
-            </Link>
+            <div className="w-full aspect-[3/4] rounded-[150px] overflow-hidden mb-10 transition-transform duration-700 shadow-2xl relative">
+              <img 
+                src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800" 
+                alt="Elena" 
+                className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3E2928]/30 via-transparent to-transparent"></div>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="font-serif text-3xl text-[#3E2928]">Elena Solstice</h3>
+              <p className="text-sm uppercase tracking-widest text-[#D4AF37]">Wisdom Keeper</p>
+            </div>
           </motion.div>
         </div>
       </section>
-    </main>
+
+      {/* Instagram Shorts / Digital Gallery (Reusing manifestationVideos) */}
+      <section className="py-32 px-6 bg-[#3E2928]/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-16">
+            <div className="space-y-4">
+              <div className="w-12 h-px bg-[#3E2928]"></div>
+              <h3 className="font-serif text-4xl text-[#3E2928]">The Digital Gallery</h3>
+            </div>
+            <a href="#" className="text-[#3E2928] text-xs uppercase tracking-[0.3em] font-bold border-b border-[#3E2928]/10 pb-2 hover:text-[#D4AF37] transition-colors mt-6 md:mt-0">
+              Follow the journey @embracinghigher
+            </a>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {manifestationVideos.map((video, index) => (
+              <motion.div 
+                key={video.id}
+                whileHover={{ scale: 1.05 }}
+                className={`aspect-[9/16] rounded-full overflow-hidden relative group cursor-pointer border-8 border-[#3E2928] shadow-xl ${index === 1 ? 'mt-12' : ''}`}
+                onClick={() => setActiveVideo(video)}
+              >
+                <img 
+                  src={video.img} 
+                  className="w-full h-full object-cover transition-transform duration-1000" 
+                  alt={video.title} 
+                />
+                <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play className="w-12 h-12 text-white fill-white" />
+                </div>
+                <div className="absolute bottom-12 left-0 right-0 text-center px-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <h4 className="text-white font-serif text-xl mb-1">{video.title}</h4>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="pt-32 pb-12 px-6 bg-[#E3F2FD]/80 backdrop-blur-md border-t border-[#3E2928]/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
+            <div className="col-span-1 md:col-span-1">
+              <div className="w-16 h-16 rounded-full border border-[#3E2928] flex items-center justify-center mb-8">
+                <span className="font-serif text-2xl font-bold text-[#3E2928]">EHS</span>
+              </div>
+              <p className="text-[#3E2928]/60 leading-relaxed text-sm">
+                Curating the world's most elegant manifestation experiences. Elevate your presence through the art of conscious being.
+              </p>
+            </div>
+            <div className="space-y-8">
+              <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">The Collection</h4>
+              <ul className="space-y-4 text-xs tracking-widest text-[#3E2928]/50 uppercase">
+                <li><Link to="/about" className="hover:text-[#D4AF37] transition-all">About Us</Link></li>
+                <li><Link to="/academy" className="hover:text-[#D4AF37] transition-all">Courses</Link></li>
+                <li><Link to="/testimonials" className="hover:text-[#D4AF37] transition-all">Testimonials</Link></li>
+                <li><Link to="/community" className="hover:text-[#D4AF37] transition-all">Community</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-8">
+              <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">Essential</h4>
+              <ul className="space-y-4 text-xs tracking-widest text-[#3E2928]/50 uppercase">
+                <li><Link to="/privacy" className="hover:text-[#D4AF37] transition-all">Privacy</Link></li>
+                <li><Link to="/terms" className="hover:text-[#D4AF37] transition-all">Terms</Link></li>
+                <li><Link to="/contact" className="hover:text-[#D4AF37] transition-all">Connect</Link></li>
+              </ul>
+            </div>
+            <div className="space-y-8">
+              <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">Frequency</h4>
+              <div className="flex space-x-6">
+                <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                  <Instagram className="w-6 h-6" />
+                </a>
+                <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                  <Youtube className="w-6 h-6" />
+                </a>
+                <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                  <Mail className="w-6 h-6" />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center border-t border-[#3E2928]/5 pt-10">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-[#3E2928]/40 mb-4 md:mb-0">© 2024 Embracing Higher Self. The Gold Standard of Being.</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-[#3E2928]/40">Designed for the Elevated Soul.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Video Modal - Kept from original functionality */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+          >
+            <motion.div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-2xl"
+              onClick={() => setActiveVideo(null)}
+            />
+            <button 
+              className="absolute top-8 right-8 z-[110] text-white/80 hover:text-white transition-colors"
+              onClick={() => setActiveVideo(null)}
+            >
+              <X size={40} strokeWidth={1.5} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-[450px] aspect-[9/16] h-[90vh] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-4 border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                id="reel-video"
+                src={activeVideo.videoUrl}
+                autoPlay
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+                onClick={togglePlay}
+              />
+              <div className="absolute inset-0 flex flex-col justify-between p-10 pointer-events-none">
+                <div className="w-full flex justify-between items-start">
+                  <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                    <span className="text-white text-[10px] font-bold uppercase tracking-widest">Featured Insight</span>
+                  </div>
+                </div>
+                <div className="w-full pointer-events-auto">
+                  <motion.h3 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-3xl font-serif font-bold text-white mb-4"
+                  >
+                    {activeVideo.title}
+                  </motion.h3>
+                  <motion.p 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-white/80 font-light text-lg mb-8"
+                  >
+                    {activeVideo.desc}
+                  </motion.p>
+                  <div className="flex items-center gap-6">
+                    <button 
+                      onClick={togglePlay}
+                      className="w-16 h-16 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow-lg hover:scale-110 transition-transform"
+                    >
+                      {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+                    </button>
+                    <div className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+                      <motion.div 
+                        animate={{ width: ["0%", "100%"] }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                        className="h-full bg-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
