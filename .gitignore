@@ -34,3 +34,7 @@ npm-debug.log*
 
 # OS
 Thumbs.db
+
+# Documentation
+*.md
+!README.md

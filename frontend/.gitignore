@@ -36,6 +36,10 @@ dist-ssr
 .env.example
 .env.example.local
 
+# Documentation
+*.md
+!README.md
+
 backend/uploads/courses/*
 backend/uploads/products/*
 backend/uploads/resources/*
