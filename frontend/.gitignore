@@ -26,7 +26,6 @@ dist-ssr
 # Environment variables
 .env
 .env.local
-.env.local
 .env.*.local
 .env.development
 .env.development.local
@@ -36,3 +35,9 @@ dist-ssr
 .env.test.local
 .env.example
 .env.example.local
+
+backend/uploads/courses/*
+backend/uploads/products/*
+backend/uploads/resources/*
+backend/uploads/stories/*
+!backend/uploads/**/.gitkeep
