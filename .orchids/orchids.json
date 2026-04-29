@@ -1,0 +1,7 @@
+{
+  "startupCommands": [
+    "cd /home/user/app/frontend && npm install && npm run dev"
+  ],
+  "projectId": "b2fcfe78-ee26-4627-8493-8464e2377492",
+  "templateId": "any"
+}
