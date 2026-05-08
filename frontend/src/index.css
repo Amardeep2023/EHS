@@ -116,3 +116,12 @@
     animation: scroll 40s linear infinite;
   }
 }
+
+/* Custom styles for phones (less than 480px) */
+@media (max-width: 479px) {
+  .ph {
+    /* Example: Make text smaller for .ph elements on phones */
+    font-size: 15px;
+    /* Add your custom phone styles below */
+  }
+}

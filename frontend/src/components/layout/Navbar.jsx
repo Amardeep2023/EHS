@@ -60,7 +60,7 @@ export default function Navbar() {
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-braven text-2xl text-[#070707] tracking-tight group-hover:text-[#2A2219] transition-colors">
+            <span className="font-braven text-2xl ph:text-xl text-[#070707] tracking-tight group-hover:text-[#2A2219] transition-colors">
               EmbracingHigherSelf
             </span>
           </Link>

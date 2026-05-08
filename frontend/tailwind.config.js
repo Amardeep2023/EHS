@@ -2,6 +2,10 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
+    screens: {
+      'ph': {'max': '479px'},
+      // ...other default screens (sm, md, etc.) will be merged automatically
+    },
     extend: {
       colors: {
         cream: '#faf8f3',

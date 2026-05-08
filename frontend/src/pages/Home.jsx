@@ -106,7 +106,7 @@ export default function Home() {
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="flex flex-col items-center w-full max-w-7xl"
         >
-          <div className="relative w-96 h-96 md:w-96 md:h-96 mb-10 warm-glow">
+          <div className="relative w-96 h-96 md:w-96 md:h-96 mb-10 warm-glow ph:w-64 ph:h-64">
             <div className="w-full h-full rounded-full  overflow-hidden p-1  backdrop-blur-sm">
               <img 
                 src={logoehs} 
@@ -287,7 +287,7 @@ export default function Home() {
               <motion.div 
                 key={video.id}
                 whileHover={{ scale: 1.05 }}
-                className={`aspect-[9/16] rounded-[150px] overflow-hidden relative group cursor-pointer border-8 border-[#3E2928] shadow-xl `}
+                className={`aspect-[9/16] rounded-[150px] overflow-hidden relative group cursor-pointer border-8 border-[#3E2928] shadow-xl ph:h-[450px] ph:w-[280px] ph:justify-center ph:mx-auto ph:rounded-[100px] `}
                 onClick={() => setActiveVideo(video)}
               >
                 <img 
