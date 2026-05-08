@@ -3,6 +3,49 @@ import paypalService from '../../services/paypal.service.js';
 import zoomService from '../../services/zoom.service.js';
 import emailService from '../../services/email.service.js';
 
+// Helper function to create Zoom meeting and send emails
+async function createZoomMeetingAndSendEmails(consultation) {
+  try {
+    console.log('🎥 Creating Zoom meeting...');
+    const meetingDateTime = new Date(consultation.preferredDate);
+    const [hours, minutes] = consultation.preferredTime.split(':');
+    meetingDateTime.setHours(parseInt(hours), parseInt(minutes));
+    
+    const zoomMeeting = await zoomService.createMeeting(
+      `Consultation with ${consultation.name}`,
+      meetingDateTime,
+      60,
+      consultation.email,
+      consultation.name
+    );
+    
+    // Update consultation with Zoom details
+    consultation.zoomMeetingId = zoomMeeting.meetingId;
+    consultation.zoomMeetingLink = zoomMeeting.meetingLink;
+    consultation.zoomStartUrl = zoomMeeting.startUrl;
+    consultation.zoomPassword = zoomMeeting.password;
+    await consultation.save();
+    
+    console.log('✅ Zoom meeting created:', zoomMeeting.meetingId);
+    
+    // Send confirmation emails
+    console.log('📧 Sending confirmation emails...');
+    await emailService.sendConfirmationEmails(consultation, {
+      meetingLink: zoomMeeting.meetingLink,
+      startUrl: zoomMeeting.startUrl,
+      meetingId: zoomMeeting.meetingId,
+      password: zoomMeeting.password
+    });
+    
+    console.log('✅ Emails sent successfully');
+  } catch (postError) {
+    console.error('❌ Post-payment services failed (Zoom/Email):', postError.message);
+    // We don't throw here because payment was already successful
+    // But we re-throw to let caller know Zoom/email failed
+    throw postError;
+  }
+}
+
 // Create booking and initiate PayPal payment
 export const createBooking = async (req, res) => {
   try {
@@ -33,6 +76,18 @@ export const createBooking = async (req, res) => {
     
     await consultation.save();
     console.log('✅ Consultation created:', consultation._id);
+
+    // Add consultation to user's consultationBookings array
+    try {
+      const User = (await import('../models/User.model.js')).default;
+      await User.findByIdAndUpdate(
+        req.user._id,
+        { $addToSet: { consultationBookings: consultation._id } }
+      );
+      console.log('✅ Consultation added to user.consultationBookings');
+    } catch (userUpdateErr) {
+      console.error('❌ Failed to update user.consultationBookings:', userUpdateErr);
+    }
     
     // Create PayPal order
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -103,28 +158,112 @@ export const capturePayment = async (req, res) => {
       });
     }
     
+    // Check if consultation is already confirmed
+    if (consultation.status === 'confirmed') {
+      console.log('ℹ️ Consultation already confirmed, skipping payment capture');
+      // Check if Zoom meeting already exists
+      if (!consultation.zoomMeetingId) {
+        console.log('ℹ️ Zoom meeting not found, creating now...');
+        await createZoomMeetingAndSendEmails(consultation);
+      }
+      return res.json({
+        success: true,
+        message: 'Booking already confirmed',
+        consultation: {
+          id: consultation._id,
+          meetingLink: consultation.zoomMeetingLink,
+          date: consultation.preferredDate,
+          time: consultation.preferredTime,
+          amountPaid: consultation.amountPaid
+        }
+      });
+    }
+    
     // Capture payment with PayPal
     let paymentResult;
     try {
       paymentResult = await paypalService.captureOrder(orderId);
     } catch (paypalError) {
       console.error('❌ PayPal capture threw error:', paypalError.message);
-      consultation.status = 'payment_failed';
-      await consultation.save();
+      
+      // Check if error is ORDER_ALREADY_CAPTURED - this means payment was already successful
+      const errorData = paypalError.message;
+      if (errorData.includes('ORDER_ALREADY_CAPTURED')) {
+        console.log('ℹ️ Order already captured, checking PayPal status...');
+        // Payment was already captured, mark as confirmed
+        consultation.status = 'confirmed';
+        consultation.paypalPaymentId = orderId; // Use orderId as paymentId
+        await consultation.save();
+        
+        // Create Zoom meeting if not already created
+        if (!consultation.zoomMeetingId) {
+          console.log('ℹ️ Creating Zoom meeting for already-captured order...');
+          try {
+            await createZoomMeetingAndSendEmails(consultation);
+          } catch (zoomEmailError) {
+            console.error('❌ Zoom/Email creation failed for already-captured order:', zoomEmailError.message);
+            // Continue - payment was already successful
+          }
+        }
+        
+        return res.json({
+          success: true,
+          message: 'Payment already captured, booking confirmed',
+          consultation: {
+            id: consultation._id,
+            meetingLink: consultation.zoomMeetingLink,
+            date: consultation.preferredDate,
+            time: consultation.preferredTime,
+            amountPaid: consultation.amountPaid
+          }
+        });
+      }
+      
+      // For other PayPal errors, delete the consultation record and return error
+      console.log('❌ Payment failed, deleting consultation record:', consultationId);
+      
+      // Remove consultation from user's consultationBookings array
+      try {
+        const User = (await import('../models/User.model.js')).default;
+        await User.findByIdAndUpdate(
+          consultation.user,
+          { $pull: { consultationBookings: consultation._id } }
+        );
+        console.log('✅ Consultation removed from user.consultationBookings');
+      } catch (userUpdateErr) {
+        console.error('❌ Failed to remove consultation from user:', userUpdateErr);
+      }
+      
+      // Delete the consultation record
+      await Consultation.findByIdAndDelete(consultationId);
+      
       return res.status(500).json({
         success: false,
-        message: 'Payment capture failed: ' + paypalError.message
+        message: 'Payment failed. Please try again.'
       });
     }
     
     if (!paymentResult.captured) {
-      consultation.status = 'payment_failed';
-      await consultation.save();
       console.log('❌ Payment capture failed for consultation:', consultationId, 'Status:', paymentResult.status);
+      
+      // Remove consultation from user's consultationBookings array
+      try {
+        const User = (await import('../models/User.model.js')).default;
+        await User.findByIdAndUpdate(
+          consultation.user,
+          { $pull: { consultationBookings: consultation._id } }
+        );
+        console.log('✅ Consultation removed from user.consultationBookings');
+      } catch (userUpdateErr) {
+        console.error('❌ Failed to remove consultation from user:', userUpdateErr);
+      }
+      
+      // Delete the consultation record
+      await Consultation.findByIdAndDelete(consultationId);
+      
       return res.status(400).json({
         success: false,
-        message: 'Payment capture failed',
-        details: paymentResult.status
+        message: 'Payment failed. Please try again.'
       });
     }
     
@@ -135,57 +274,20 @@ export const capturePayment = async (req, res) => {
     
     console.log('✅ Payment captured:', paymentResult.paymentId);
     
-    // Create Zoom meeting and send emails (Non-blocking to prevent payment success failure)
-    const handlePostPayment = async () => {
-      try {
-        console.log('🎥 Creating Zoom meeting...');
-        const meetingDateTime = new Date(consultation.preferredDate);
-        const [hours, minutes] = consultation.preferredTime.split(':');
-        meetingDateTime.setHours(parseInt(hours), parseInt(minutes));
-        
-        const zoomMeeting = await zoomService.createMeeting(
-          `Consultation with ${consultation.name}`,
-          meetingDateTime,
-          60,
-          consultation.email,
-          consultation.name
-        );
-        
-        // Update consultation with Zoom details
-        consultation.zoomMeetingId = zoomMeeting.meetingId;
-        consultation.zoomMeetingLink = zoomMeeting.meetingLink;
-        consultation.zoomStartUrl = zoomMeeting.startUrl;
-        consultation.zoomPassword = zoomMeeting.password;
-        await consultation.save();
-        
-        console.log('✅ Zoom meeting created:', zoomMeeting.meetingId);
-        
-        // Send confirmation emails
-        console.log('📧 Sending confirmation emails...');
-        await emailService.sendConfirmationEmails(consultation, {
-          meetingLink: zoomMeeting.meetingLink,
-          startUrl: zoomMeeting.startUrl,
-          meetingId: zoomMeeting.meetingId,
-          password: zoomMeeting.password
-        });
-        
-        console.log('✅ Emails sent successfully');
-      } catch (postError) {
-        console.error('❌ Post-payment services failed (Zoom/Email):', postError.message);
-        // We don't throw here because payment was already successful
-      }
-    };
-
-    // Execute post-payment tasks ONLY if payment was captured
-    console.log('🚀 Starting post-payment tasks...');
-    handlePostPayment();
+    // Create Zoom meeting and send emails (non-blocking, don't fail the request if this fails)
+    try {
+      await createZoomMeetingAndSendEmails(consultation);
+    } catch (zoomEmailError) {
+      console.error('❌ Zoom/Email creation failed but payment was successful:', zoomEmailError.message);
+      // Continue - payment was successful, user can access booking even if Zoom/email failed
+    }
     
     res.json({
       success: true,
       message: 'Booking confirmed successfully',
       consultation: {
         id: consultation._id,
-        meetingLink: consultation.zoomMeetingLink, // Might be null if handlePostPayment is still running
+        meetingLink: consultation.zoomMeetingLink, // Might be null if Zoom creation failed
         date: consultation.preferredDate,
         time: consultation.preferredTime,
         amountPaid: consultation.amountPaid

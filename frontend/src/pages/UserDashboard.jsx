@@ -16,6 +16,10 @@ export default function Dashboard() {
   const { user, token, logout, isLoggedIn, API_URL } = useAuth();
   const navigate = useNavigate();
 
+  // Defensive: Ensure bookings is always an array
+  const bookingsArray = Array.isArray(bookings) ? bookings : [];
+  console.log('Rendering My Sessions tab, bookings:', bookingsArray);
+
   // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
@@ -38,6 +42,10 @@ export default function Dashboard() {
         setUserProfile(data.user);
         setCourses(data.user.purchasedCourses || []);
         setProducts(data.user.purchasedProducts || []);
+        // Also set bookings from consultationBookings if available
+        if (data.user.consultationBookings && data.user.consultationBookings.length > 0) {
+          setBookings(data.user.consultationBookings);
+        }
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -252,10 +260,13 @@ export default function Dashboard() {
         {/* My Sessions Tab */}
         {activeTab === 'sessions' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            {bookings.length > 0 ? (
+            {bookingsArray.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bookings.map((booking, idx) => {
-                  const meetingDate = new Date(booking.date);
+                {bookingsArray.map((booking, idx) => {
+                  // Handle both data structures: from /consultations/my and from user.consultationBookings
+                  const bookingDate = booking.date || booking.preferredDate;
+                  const bookingTime = booking.time || booking.preferredTime;
+                  const meetingDate = new Date(bookingDate);
                   const isExpired = meetingDate < new Date();
                   const isConfirmed = booking.status === 'confirmed';
 
@@ -290,11 +301,11 @@ export default function Dashboard() {
                             <div className="flex items-center gap-3 text-secondary">
                               <Calendar size={18} className="text-gold" />
                               <span className="text-sm font-medium">
-                                {new Date(booking.date || booking.preferredDate).toLocaleDateString('en-US', { 
-                                  weekday: 'long', 
-                                  year: 'numeric', 
-                                  month: 'long', 
-                                  day: 'numeric' 
+                                {new Date(bookingDate).toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
                                 })}
                               </span>
                             </div>
@@ -302,32 +313,34 @@ export default function Dashboard() {
                               <div className="w-[18px] flex justify-center">
                                 <span className="text-gold font-bold text-xs">@</span>
                               </div>
-                              <span className="text-sm font-medium">{booking.time || booking.preferredTime}</span>
+                              <span className="text-sm font-medium">{bookingTime}</span>
                             </div>
                           </div>
                         </div>
 
-                      {isConfirmed && !isExpired && booking.meetingLink ? (
-                        <div className="space-y-4">
-                          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                            <p className="text-xs text-emerald-700 font-bold uppercase tracking-widest mb-1">Booking Confirmed ✨</p>
-                            <p className="text-xs text-emerald-600">Your Zoom link is ready for your session.</p>
+                      {isConfirmed && !isExpired ? (
+                        (booking.meetingLink || booking.zoomMeetingLink) ? (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                              <p className="text-xs text-emerald-700 font-bold uppercase tracking-widest mb-1">Booking Confirmed ✨</p>
+                              <p className="text-xs text-emerald-600">Your Zoom link is ready for your session.</p>
+                            </div>
+                            <a
+                              href={booking.meetingLink || booking.zoomMeetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full flex items-center justify-center gap-2 bg-espresso text-cream py-4 rounded-full font-medium hover:bg-gold hover:text-espresso transition-all duration-300 group/link shadow-lg shadow-espresso/10"
+                            >
+                              Join Zoom Meeting
+                              <ArrowRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
+                            </a>
                           </div>
-                          <a
-                            href={booking.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full flex items-center justify-center gap-2 bg-espresso text-cream py-4 rounded-full font-medium hover:bg-gold hover:text-espresso transition-all duration-300 group/link shadow-lg shadow-espresso/10"
-                          >
-                            Join Zoom Meeting
-                            <ArrowRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
-                          </a>
-                        </div>
-                      ) : isConfirmed && !isExpired ? (
-                        <div className="p-4 bg-gold/5 rounded-2xl border border-gold/10">
-                          <p className="text-xs text-gold font-bold uppercase tracking-widest mb-1">Link Generating...</p>
-                          <p className="text-xs text-secondary">We are currently creating your Zoom session. Please check back in a few minutes.</p>
-                        </div>
+                        ) : (
+                          <div className="p-4 bg-gold/5 rounded-2xl border border-gold/10">
+                            <p className="text-xs text-gold font-bold uppercase tracking-widest mb-1">Link Generating...</p>
+                            <p className="text-xs text-secondary">We are currently creating your Zoom session. Please check back in a few minutes.</p>
+                          </div>
+                        )
                       ) : isExpired ? (
                         <button disabled className="w-full bg-espresso/5 text-espresso/40 py-4 rounded-full font-medium cursor-not-allowed border border-espresso/10">
                           Session Ended
