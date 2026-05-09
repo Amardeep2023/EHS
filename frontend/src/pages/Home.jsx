@@ -287,7 +287,7 @@ export default function Home() {
               <motion.div 
                 key={video.id}
                 whileHover={{ scale: 1.05 }}
-                className={`aspect-[9/16] rounded-[150px] overflow-hidden relative group cursor-pointer border-8 border-[#3E2928] shadow-xl ph:h-[450px] ph:w-[280px] ph:justify-center ph:mx-auto ph:rounded-[100px] `}
+                className={`aspect-[9/16] rounded-[150px] overflow-hidden relative group cursor-pointer border-8 border-[#3E2928] shadow-xl  `}
                 onClick={() => setActiveVideo(video)}
               >
                 <img 

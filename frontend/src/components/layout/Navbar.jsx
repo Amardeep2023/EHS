@@ -60,13 +60,13 @@ export default function Navbar() {
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-braven text-2xl ph:text-xl text-[#070707] tracking-tight group-hover:text-[#2A2219] transition-colors">
+            <span className="font-braven text-2xl  text-[#070707] tracking-tight group-hover:text-[#2A2219] transition-colors">
               EmbracingHigherSelf
             </span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-10">
+          <nav className=" md:flex items-center gap-10">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
