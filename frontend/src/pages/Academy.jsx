@@ -4,9 +4,10 @@ import { ArrowUpRight, Clock, BookOpen, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import ConfirmDeleteModal from '../components/common/ConfirmDeleteModal'; // (see below)
+import ConfirmDeleteModal from '../components/common/ConfirmDeleteModal';
+import { resolveMediaUrl } from '../utils/media';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Academy() {
   const { user, isAdmin } = useAuth();
@@ -38,7 +39,7 @@ export default function Academy() {
       duration,
       lessons: apiCourse.totalDays, // Each day is a lesson
       students: apiCourse.enrollmentCount || 0,
-      img: apiCourse.coverImage || 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&auto=format&fit=crop&q=60',
+      img: resolveMediaUrl(apiCourse.thumbnail || apiCourse.coverImage || apiCourse.image || '') || 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&auto=format&fit=crop&q=60',
       purchased: apiCourse.purchased || false, // This will need to be populated from user data
       _id: apiCourse._id, // Keep original ID for delete operations
     };

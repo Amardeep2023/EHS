@@ -1,75 +1,67 @@
-import { Router } from 'express';
-import { protect, adminOnly } from '../middleware/auth.middleware.js';
-import { uploadResource } from '../middleware/upload.middleware.js';
-import Resource from '../models/Resource.model.js';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const router = Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// POST /api/resources/upload — admin uploads a PDF
-router.post(
-  '/upload',
-  protect,
-  adminOnly,
-  uploadResource.single('file'),   // uses your shared uploadResource multer config
-  async (req, res) => {
-    try {
-      const { title, description, type, category } = req.body;
+const uploadRoot = path.join(__dirname, '..', '..', 'uploads');
+const resourceDir = path.join(uploadRoot, 'resources');
+const courseDir = path.join(uploadRoot, 'courses');
+const thumbnailDir = path.join(courseDir, 'thumbnails');
+const audioDir = path.join(courseDir, 'audio');
+const pdfDir = path.join(courseDir, 'pdf');
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: 'No file uploaded.' });
-      }
-      if (!title || !description) {
-        return res.status(400).json({ success: false, message: 'Title and description are required.' });
-      }
+for (const dir of [uploadRoot, resourceDir, courseDir, thumbnailDir, audioDir, pdfDir]) {
+  fs.mkdirSync(dir, { recursive: true });
+}
 
-      const fileUrl = `/uploads/resources/${req.file.filename}`;
+const createStorage = (destination) =>
+  multer.diskStorage({
+    destination: (req, file, cb) => cb(null, destination),
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
+    },
+  });
 
-      const resource = await Resource.create({
-        title,
-        description,
-        type: type || 'PDF',
-        category: category || 'Beginner Guides',
-        fileUrl,
-        isPublished: true,
-      });
-
-      res.status(201).json({ success: true, resource });
-    } catch (err) {
-      // Multer errors (wrong file type, size limit) arrive here
-      res.status(500).json({ success: false, message: err.message });
+export const uploadResource = multer({
+  storage: createStorage(resourceDir),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed for resources'), false);
     }
-  }
-);
-
-// GET /api/resources — public, returns published resources
-router.get('/', async (req, res) => {
-  try {
-    const { category } = req.query;
-    const filter = { isPublished: true };
-    if (category) filter.category = category;
-    const resources = await Resource.find(filter).sort({ createdAt: -1 });
-    res.json({ success: true, resources });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+  },
 });
 
-router.put('/:id', protect, adminOnly, async (req, res) => {
-  try {
-    const resource = await Resource.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ success: true, resource });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-router.delete('/:id', protect, adminOnly, async (req, res) => {
-  try {
-    await Resource.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: 'Deleted' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-export default router;
+export const uploadCourseFiles = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) return cb(null, thumbnailDir);
+      if (file.mimetype.startsWith('audio/')) return cb(null, audioDir);
+      if (file.mimetype === 'application/pdf') return cb(null, pdfDir);
+      cb(null, courseDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
+    },
+  }),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/webm', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image, audio, and PDF files are allowed'), false);
+    }
+  },
+}).fields([
+  { name: 'thumbnail', maxCount: 1 },
+  { name: 'audio', maxCount: 10 },
+  { name: 'pdf', maxCount: 10 },
+]);

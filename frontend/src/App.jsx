@@ -7,11 +7,14 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancel from './pages/PaymentCancel';
 import CoursePaymentSuccess from './pages/CoursePaymentSuccess';
 import CoursePaymentCancel from './pages/CoursePaymentCancel';
+import CourseContent from './pages/CourseContent';
 import CourseDetail from './pages/CourseDetail';
+import Checkout from './pages/Checkout';
 import About from './pages/About';
 import SuccessStories from './pages/SuccessStories';
 import FreeResources from './pages/FreeResources';
 import Academy from './pages/Academy';
+import Courses from './pages/Courses';
 
 import Shop from './pages/Shop';
 import Consultation from './pages/Consultation';
@@ -74,14 +77,17 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/academy" element={<Academy />} />
+                    <Route path="/courses" element={<Courses />} />
+                    <Route path="/courses/:courseId" element={<CourseDetail />} />
                     <Route path="/academy/:courseId" element={<CourseDetail />} />
+                    <Route path="/checkout/:courseId" element={<Checkout />} />
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/free-resources" element={<FreeResources />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/consultation" element={<Consultation />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/payment-cancel" element={<PaymentCancel />} />
-                    <Route path="/courses" element={<CourseDetail />} />
+                    
                     {/* Protected routes */}
                     <Route
                       path="/portal-access/story-upload"
@@ -90,7 +96,7 @@ function App() {
                           <StoryForm />
                         </ProtectedRoute>
                       }
-                    />
+                    />                    <Route path="/course-content/:courseId" element={<CourseContent />} />
                     <Route
                       path="/dashboard"
                       element={

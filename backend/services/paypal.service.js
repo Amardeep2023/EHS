@@ -59,7 +59,7 @@ class PayPalService {
             currency_code: currency,
             value: amount.toFixed(2), // PayPal expects strings like "197.00"
           },
-          description: 'Consultation Session Booking',
+          description: 'Course Purchase',
           custom_id: bookingId
         }],
         application_context: {

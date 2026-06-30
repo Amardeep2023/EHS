@@ -21,6 +21,22 @@ export function adminOnly(req, res, next) {
   next();
 }
 
+/**
+ * Optional auth — decodes JWT if present, but does NOT block unauthenticated requests.
+ * Sets req.user when a valid token is provided; otherwise req.user remains undefined.
+ */
+export function optionalProtect(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+    } catch {
+      // Token invalid — just continue without user
+    }
+  }
+  next();
+}
+
 export function requirePurchase(model) {
   return async (req, res, next) => {
     const user = await model.findById(req.user.id);

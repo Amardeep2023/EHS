@@ -14,7 +14,7 @@ export default function CoursePaymentSuccess() {
   useEffect(() => {
     const capture = async () => {
       const activeToken = token || localStorage.getItem('ehs_token');
-      const orderId = searchParams.get('token');       // PayPal appends ?token=
+      const orderId = searchParams.get('token');
       const courseId = searchParams.get('courseId');
 
       if (!orderId || !courseId) {
@@ -22,7 +22,22 @@ export default function CoursePaymentSuccess() {
         setProcessing(false);
         return;
       }
-      if (!activeToken) return; // wait for auth
+
+      const isDummyPurchase = orderId.startsWith('dummy-');
+      if (isDummyPurchase) {
+        const stored = JSON.parse(localStorage.getItem('dummyPurchasedCourses') || '[]');
+        if (!stored.includes(courseId)) {
+          stored.push(courseId);
+          localStorage.setItem('dummyPurchasedCourses', JSON.stringify(stored));
+        }
+        localStorage.setItem('lastPurchasedCourseId', courseId);
+        window.dispatchEvent(new Event('dummy-purchase-updated'));
+        setTimeout(() => navigate('/dashboard'), 1500);
+        setProcessing(false);
+        return;
+      }
+
+      if (!activeToken) return;
 
       try {
         const res = await axios.post(

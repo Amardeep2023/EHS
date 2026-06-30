@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CourseForm from '../components/admin/CourseForm.jsx';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // ── Token helpers ────────────────────────────────────────────────
 const TOKEN_KEY = 'admin_token';
@@ -260,8 +260,8 @@ function ContentTable({ items, onDelete }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <tbody className="divide-y divide-espresso/5">
-          {items.map((item, i) => (
-            <tr key={i} className="group">
+          {items.map((item) => (
+            <tr key={item._id || item.title} className="group">
               <td className="py-3 pr-4 text-espresso font-medium">{item.title}</td>
               <td className="py-3 pr-4 text-secondary hidden md:table-cell">{item.meta}</td>
               <td className="py-3 pl-4 text-right">
@@ -270,7 +270,7 @@ function ContentTable({ items, onDelete }) {
                     <Edit size={13} />
                   </button>
                   <button
-                    onClick={() => onDelete(i)}
+                    onClick={() => onDelete(item._id)}
                     className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 transition-colors"
                   >
                     <Trash2 size={13} />
@@ -293,11 +293,7 @@ function AdminDashboard({ user, onLogout }) {
 
   const showToast = (message, type = 'error') => setToast({ message, type });
 
-  const [courses, setCourses] = useState([
-    { title: 'Manifestation Mastery', meta: '$197 · 24 lessons' },
-    { title: 'Quantum Alignment', meta: '$297 · 18 lessons' },
-    { title: 'Soul Purpose Blueprint', meta: '$347 · 30 lessons' },
-  ]);
+  const [courses, setCourses] = useState([]);
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [products, setProducts] = useState([
     { title: 'Manifestation Journal', meta: '$27 · PDF' },
@@ -309,10 +305,30 @@ function AdminDashboard({ user, onLogout }) {
   const [lastUploaded, setLastUploaded] = useState(null);
   const [stories, setStories] = useState([]);
 
-  // Fetch resources on component mount 
-  useEffect(() => { 
-    fetchResources(); 
-  }, []); 
+  useEffect(() => {
+    fetchResources();
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/courses/admin`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCourses(
+          (data.courses || []).map((course) => ({
+            ...course,
+            meta: `$${course.price} · ${course.content?.length || 0} content item${course.content?.length === 1 ? '' : 's'}`,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to fetch courses:', err);
+    }
+  };
 
   const fetchResources = async () => { 
     try { 
@@ -545,7 +561,11 @@ function AdminDashboard({ user, onLogout }) {
                   <CourseForm
                     onSuccess={course => {
                       setCourses(prev => [
-                        { title: course.title, meta: `$${course.price} · ${(course.modules?.length || 0)} modules` },
+                        {
+                          ...course,
+                          title: course.title,
+                          meta: `$${course.price} · ${(course.content?.length || 0)} content item${course.content?.length === 1 ? '' : 's'}`,
+                        },
                         ...prev,
                       ]);
                       setShowCourseForm(false);
@@ -571,7 +591,19 @@ function AdminDashboard({ user, onLogout }) {
                 )}
                 <ContentTable
                   items={courses}
-                  onDelete={i => setCourses(prev => prev.filter((_, idx) => idx !== i))}
+                  onDelete={async (id) => {
+                    try {
+                      const token = getToken();
+                      const res = await fetch(`${API_URL}/courses/${id}`, {
+                        method: 'DELETE',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      if (!res.ok) throw new Error('Delete failed');
+                      setCourses(prev => prev.filter((course) => course._id !== id));
+                    } catch (err) {
+                      console.error('Failed to delete course:', err);
+                    }
+                  }}
                 />
               </AdminSection>
             </motion.div>

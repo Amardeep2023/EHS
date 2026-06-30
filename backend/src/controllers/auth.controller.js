@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.model.js';
+import Course from '../models/Course.model.js';
 
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -106,7 +107,6 @@ export async function googleAuth(req, res) {
 export async function getMe(req, res) {
   try {
     const user = await User.findById(req.user.id)
-      .populate('purchasedCourses', 'title price thumbnail')
       .populate('purchasedProducts', 'title price')
       .populate('consultationBookings');
 
@@ -114,7 +114,27 @@ export async function getMe(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, user });
+    const purchasedCourses = [];
+    for (const purchase of user.purchasedCourses || []) {
+      const courseId = purchase.courseId?.toString?.() || purchase.courseId;
+      if (!courseId) continue;
+
+      const course = await Course.findById(courseId).select('title price thumbnail slug').lean();
+      if (!course) continue;
+
+      purchasedCourses.push({
+        _id: course._id,
+        courseId: course._id,
+        title: course.title,
+        price: course.price,
+        thumbnail: course.thumbnail || '',
+        slug: course.slug,
+        purchasedAt: purchase.purchasedAt,
+        amountPaid: purchase.amountPaid,
+      });
+    }
+
+    res.json({ success: true, user: { ...user.toObject(), purchasedCourses } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

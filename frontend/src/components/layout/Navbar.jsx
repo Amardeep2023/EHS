@@ -7,8 +7,9 @@ import GoogleAuthModal from '../common/GoogleAuthModal';
 
 const navLinks = [
   { label: 'About', to: '/about' },
+  { label: 'Courses', to: '/courses' },
   { label: 'Community', to: '/academy' },
-  { label: 'Courses', to: '/free-resources' },
+  { label: 'Free Resources', to: '/free-resources' },
   { label: 'Testimonials', to: '/success-stories' },
 ];
 
@@ -50,7 +51,7 @@ export default function Navbar() {
         } luxury-border-b`}
         style={{ borderBottom: '1px solid rgba(42,34,25,0.08)' }}
       >
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+        <div className="max-w-8xl mx-auto px-6 h-full flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-12 h-12 rounded-full overflow-hidden  group-hover:border-[#D47E5A] transition-colors shadow-sm bg-white flex items-center justify-center">

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, Pause, FileText, Headphones, Moon, Sun, ShoppingCart, Lock } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { resolveMediaUrl } from '../utils/media';
 
 // ── Small reusable audio player ───────────────────────────────────
 function AudioPlayer({ src, label, icon: Icon, accent = 'gold' }) {
@@ -51,7 +52,7 @@ function AudioPlayer({ src, label, icon: Icon, accent = 'gold' }) {
 
 // ── Main Component ────────────────────────────────────────────────
 export default function CourseDetail() {
-  const { courseId } = useParams(); // route: /academy/:courseId (slug)
+  const { courseId } = useParams();
   const navigate = useNavigate();
   const { token, API_URL, user } = useAuth();
 
@@ -69,7 +70,21 @@ export default function CourseDetail() {
         const res = await axios.get(`${API_URL}/courses/${courseId}`, {
           headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
         });
-        setCourse(res.data.course);
+        const normalizedCourse = {
+          ...res.data.course,
+          coverImage: resolveMediaUrl(res.data.course.coverImage || res.data.course.thumbnail || ''),
+          includedItems: (res.data.course.content || []).map((item) => item.title),
+          days: (res.data.course.content || []).map((item, index) => ({
+            dayNumber: index + 1,
+            title: item.title,
+            pdfUrl: resolveMediaUrl(item.pdfUrl || ''),
+            pdfTitle: item.pdfTitle || 'Lesson PDF',
+            morningAudioUrl: resolveMediaUrl(item.audioUrl || ''),
+            eveningAudioUrl: '',
+            storyAudios: [],
+          })),
+        };
+        setCourse(normalizedCourse);
         setHasPurchased(res.data.hasPurchased);
       } catch (err) {
         setError('Course not found');
@@ -134,8 +149,8 @@ export default function CourseDetail() {
           </Link>
         </div>
 
-        <div className="max-w-3xl mx-auto px-6 py-10 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="max-w-5xl mx-auto px-6 py-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-luxury luxury-border bg-white p-8 md:p-10 shadow-luxury-sm">
             {course.coverImage && (
               <img src={course.coverImage} alt={course.title}
                 className="w-full aspect-video object-cover rounded-luxury mb-8" />
@@ -148,32 +163,49 @@ export default function CourseDetail() {
             </h1>
             <p className="text-secondary mb-6 leading-relaxed">{course.description}</p>
 
-            <div className="flex justify-center gap-8 mb-8">
-              <div className="text-center">
-                <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>21</p>
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <div className="rounded-2xl bg-cream/70 p-4 text-center">
+                <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>{course.totalDays || 21}</p>
                 <p className="text-label text-secondary">Days</p>
               </div>
-              <div className="text-center">
+              <div className="rounded-2xl bg-cream/70 p-4 text-center">
                 <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>{course.enrollmentCount || 0}</p>
                 <p className="text-label text-secondary">Students</p>
               </div>
-              <div className="text-center">
+              <div className="rounded-2xl bg-cream/70 p-4 text-center">
                 <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>${course.price}</p>
                 <p className="text-label text-secondary">One-time</p>
               </div>
             </div>
 
-            <button
-              onClick={handlePurchase}
-              disabled={purchasing}
-              className="inline-flex items-center gap-3 bg-espresso text-cream px-10 py-4 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300 disabled:opacity-60"
-            >
-              {purchasing
-                ? <div className="w-5 h-5 border-2 border-cream/30 border-t-cream rounded-full animate-spin" />
-                : <><ShoppingCart size={16} /> Enroll Now — ${course.price}</>}
-            </button>
+            <div className="rounded-2xl border border-espresso/10 bg-cream/50 p-6 text-left mb-8">
+              <h2 className="font-boska text-2xl text-espresso mb-4" style={{ fontFamily: 'Boska, Georgia, serif' }}>
+                What you will receive in this course
+              </h2>
+              <p className="text-sm text-secondary leading-relaxed mb-5">
+                This course includes everything listed below so you can move through the experience with clarity, structure, and support.
+              </p>
+              <ul className="space-y-3 text-sm text-espresso">
+                {(course.includedItems || []).map((item, index) => (
+                  <li key={index} className="flex gap-3 items-start">
+                    <span className="mt-1 h-2.5 w-2.5 rounded-full bg-gold flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <p className="text-xs text-secondary mt-4">Secure checkout via PayPal. Instant access after payment.</p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => navigate(`/checkout/${course._id || courseId}`)}
+                disabled={purchasing}
+                className="inline-flex items-center gap-3 bg-espresso text-cream px-10 py-4 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300 disabled:opacity-60"
+              >
+                <ShoppingCart size={16} /> Enroll Now — ${course.price}
+              </button>
+            </div>
+
+            <p className="text-xs text-secondary mt-4 text-center">Secure checkout via PayPal. Instant access after payment.</p>
           </motion.div>
         </div>
       </main>

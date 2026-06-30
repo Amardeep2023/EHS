@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, ShoppingBag, Calendar, LogOut, Settings, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { resolveMediaUrl } from '../utils/media';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Dashboard() {
   const [userProfile, setUserProfile] = useState(null);
@@ -15,6 +16,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('courses');
   const { user, token, logout, isLoggedIn, API_URL } = useAuth();
   const navigate = useNavigate();
+
+  // Courses are fetched exclusively from the backend via /auth/me
 
   // Defensive: Ensure bookings is always an array
   const bookingsArray = Array.isArray(bookings) ? bookings : [];
@@ -199,7 +202,7 @@ export default function Dashboard() {
                     {/* Course Image */}
                     <div className="relative h-48 bg-gradient-to-br from-gold/20 to-espresso/10 overflow-hidden">
                       {course.thumbnail ? (
-                        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={resolveMediaUrl(course.thumbnail)} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <BookOpen size={48} className="text-gold/30" />
@@ -214,13 +217,13 @@ export default function Dashboard() {
                         <h3 className="font-boska italic text-xl text-espresso line-clamp-2" style={{ fontFamily: 'Boska, Georgia, serif' }}>
                           {course.title}
                         </h3>
-                        {course.amountPaid !== undefined && course.amountPaid < course.price ? (
-                          <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">
-                            Pending
-                          </span>
-                        ) : (
+                        {course.paymentStatus === 'completed' || (course.amountPaid || 0) > 0 ? (
                           <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full">
                             Purchased
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">
+                            Pending
                           </span>
                         )}
                       </div>
@@ -228,32 +231,17 @@ export default function Dashboard() {
 
                       {/* Continue Learning Button */}
                       <button
-                        onClick={() => navigate(`/academy/${course._id || course.courseId}`)}
+                        onClick={() => navigate(`/course-content/${course._id || course.courseId}`)}
                         className="w-full flex items-center justify-center gap-2 bg-gold text-espresso py-3 rounded-full font-medium hover:bg-cream transition-all duration-300 group/btn"
                       >
-                        Continue Learning
+                        Explore Content
                         <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
                       </button>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-16">
-                <BookOpen size={64} className="text-gold/20 mx-auto mb-4" />
-                <h3 className="font-boska italic text-2xl text-espresso mb-2" style={{ fontFamily: 'Boska, Georgia, serif' }}>
-                  No Courses Yet
-                </h3>
-                <p className="text-secondary mb-6">Explore our academy and enroll in amazing courses.</p>
-                <a
-                  href="/academy"
-                  className="inline-flex items-center gap-2 bg-gold text-espresso px-8 py-3 rounded-full font-medium hover:bg-cream transition-all duration-300"
-                >
-                  Browse Courses
-                  <ArrowRight size={18} />
-                </a>
-              </div>
-            )}
+            ) : null}
           </motion.div>
         )}
 
