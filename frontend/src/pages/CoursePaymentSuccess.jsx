@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader } from 'lucide-react';
 import axios from 'axios';
@@ -10,8 +10,13 @@ export default function CoursePaymentSuccess() {
   const { token, API_URL } = useAuth();
   const [processing, setProcessing] = useState(true);
   const [error, setError] = useState('');
+  const capturedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate runs when token or other deps change
+    if (capturedRef.current) return;
+    capturedRef.current = true;
+
     const capture = async () => {
       const activeToken = token || localStorage.getItem('ehs_token');
       const orderId = searchParams.get('token');
@@ -37,7 +42,11 @@ export default function CoursePaymentSuccess() {
         return;
       }
 
-      if (!activeToken) return;
+      if (!activeToken) {
+        // Token not yet available — wait for it instead of failing
+        capturedRef.current = false;
+        return;
+      }
 
       try {
         const res = await axios.post(

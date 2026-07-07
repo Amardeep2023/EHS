@@ -23,11 +23,11 @@ router.post('/upload', protect, adminOnly, uploadCourseFiles, async (req, res) =
     if (files.thumbnail?.[0]) {
       urls.thumbnailUrl = `/uploads/courses/thumbnails/${files.thumbnail[0].filename}`;
     }
-    if (files.audio?.[0]) {
-      urls.audioUrl = `/uploads/courses/audio/${files.audio[0].filename}`;
+    if (files.audio?.length) {
+      urls.audioUrls = files.audio.map((f) => `/uploads/courses/audio/${f.filename}`);
     }
-    if (files.pdf?.[0]) {
-      urls.pdfUrl = `/uploads/courses/pdf/${files.pdf[0].filename}`;
+    if (files.pdf?.length) {
+      urls.pdfUrls = files.pdf.map((f) => `/uploads/courses/pdf/${f.filename}`);
     }
 
     if (!Object.keys(urls).length) {

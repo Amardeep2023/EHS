@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CourseForm from '../components/admin/CourseForm.jsx';
+import ProductUpload from '../components/admin/ProductUpload.jsx';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -295,11 +296,8 @@ function AdminDashboard({ user, onLogout }) {
 
   const [courses, setCourses] = useState([]);
   const [showCourseForm, setShowCourseForm] = useState(false);
-  const [products, setProducts] = useState([
-    { title: 'Manifestation Journal', meta: '$27 · PDF' },
-    { title: 'Abundance Workbook', meta: '$19 · PDF' },
-    { title: 'Vision Board Guide', meta: '$15 · PDF' },
-  ]);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [products, setProducts] = useState([]);
   const [resources, setResources] = useState([]);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [lastUploaded, setLastUploaded] = useState(null);
@@ -308,6 +306,7 @@ function AdminDashboard({ user, onLogout }) {
   useEffect(() => {
     fetchResources();
     fetchCourses();
+    fetchProducts();
   }, []);
 
   const fetchCourses = async () => {
@@ -327,6 +326,50 @@ function AdminDashboard({ user, onLogout }) {
       }
     } catch (err) {
       console.error('Failed to fetch courses:', err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/products/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProducts(
+          (data.products || []).map((p) => ({
+            ...p,
+            _id: p._id,
+            title: p.title,
+            meta: `$${p.price} · ${p.category}`,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    const product = products.find((p) => p._id === id);
+    if (!window.confirm(`Are you sure you want to delete "${product?.title}"? This cannot be undone.`)) return;
+
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProducts((prev) => prev.filter((p) => p._id !== id));
+        showToast(`"${product?.title}" deleted successfully`, 'success');
+      } else {
+        showToast(data.message || 'Delete failed', 'error');
+      }
+    } catch (err) {
+      showToast('Error deleting product', 'error');
     }
   };
 
@@ -446,6 +489,19 @@ function AdminDashboard({ user, onLogout }) {
     bookings:  { title: 'Consultation Bookings',    items: bookings,  setItems: setBookings },
   };
 
+  const handleProductAdded = (newProduct) => {
+    setProducts((prev) => [
+      {
+        ...newProduct,
+        _id: newProduct._id,
+        title: newProduct.title,
+        meta: `$${newProduct.price} · ${newProduct.category}`,
+      },
+      ...prev,
+    ]);
+    showToast(`"${newProduct.title}" created successfully!`, 'success');
+  };
+
   const current = sectionData[activeSection];
 
   return (
@@ -549,6 +605,99 @@ function AdminDashboard({ user, onLogout }) {
                 </div>
               </AdminSection>
             </motion.div>
+          ) : activeSection === 'products' ? (
+            <motion.div
+              key="products"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <AdminSection title="Manage Products">
+                <div
+                  className="flex items-center gap-4 p-5 rounded-2xl mb-6 cursor-pointer group hover:border-gold/30 transition-colors"
+                  style={{ border: '1px dashed rgba(42,34,25,0.15)' }}
+                  onClick={() => setShowProductForm(true)}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-gold transition-colors"
+                    style={{ background: 'rgba(42,34,25,0.06)' }}
+                  >
+                    <Plus size={16} className="text-espresso" />
+                  </div>
+                  <span className="text-sm text-secondary group-hover:text-espresso transition-colors">
+                    Add New Product
+                  </span>
+                </div>
+
+                {products.length === 0 ? (
+                  <div className="py-12 text-center text-secondary text-sm">
+                    No products yet. Click "Add New Product" to create your first one.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-espresso/5">
+                          <th className="py-3 pr-4 text-left text-label text-secondary font-medium">Title</th>
+                          <th className="py-3 pr-4 text-left text-label text-secondary font-medium hidden sm:table-cell">Details</th>
+                          <th className="py-3 pr-4 text-left text-label text-secondary font-medium hidden md:table-cell">Status</th>
+                          <th className="py-3 pl-4 text-right text-label text-secondary font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-espresso/5">
+                        {products.map((product) => (
+                          <tr key={product._id} className="group hover:bg-cream/50 transition-colors">
+                            <td className="py-3 pr-4">
+                              <div className="flex items-center gap-3">
+                                {product.coverImage && (
+                                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white">
+                                    <img
+                                      src={product.coverImage.startsWith('http') ? product.coverImage : `${API_URL.replace('/api', '')}${product.coverImage}`}
+                                      alt={product.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <span className="font-medium text-espresso">{product.title}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 pr-4 text-secondary hidden sm:table-cell">
+                              ${product.price} · {product.category}
+                            </td>
+                            <td className="py-3 pr-4 hidden md:table-cell">
+                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                                product.isPublished
+                                  ? 'bg-emerald-50 text-emerald-600'
+                                  : 'bg-amber-50 text-amber-600'
+                              }`}>
+                                {product.isPublished ? 'Published' : 'Draft'}
+                              </span>
+                            </td>
+                            <td className="py-3 pl-4 text-right">
+                              <div className="flex items-center gap-2 justify-end">
+                                <button
+                                  onClick={() => handleDeleteProduct(product._id)}
+                                  className="p-2 rounded-lg hover:bg-red-50 text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </AdminSection>
+
+              {/* Product Upload Drawer */}
+              <ProductUpload
+                isOpen={showProductForm}
+                onClose={() => setShowProductForm(false)}
+                onSuccess={handleProductAdded}
+              />
+            </motion.div>
           ) : activeSection === 'courses' ? (
             <motion.div
               key="courses"
@@ -557,38 +706,21 @@ function AdminDashboard({ user, onLogout }) {
               exit={{ opacity: 0, y: -10 }}
             >
               <AdminSection title="Manage Courses">
-                {showCourseForm ? (
-                  <CourseForm
-                    onSuccess={course => {
-                      setCourses(prev => [
-                        {
-                          ...course,
-                          title: course.title,
-                          meta: `$${course.price} · ${(course.content?.length || 0)} content item${course.content?.length === 1 ? '' : 's'}`,
-                        },
-                        ...prev,
-                      ]);
-                      setShowCourseForm(false);
-                    }}
-                    onCancel={() => setShowCourseForm(false)}
-                  />
-                ) : (
+                <div
+                  className="flex items-center gap-4 p-5 rounded-2xl mb-6 cursor-pointer group hover:border-gold/30 transition-colors"
+                  style={{ border: '1px dashed rgba(42,34,25,0.15)' }}
+                  onClick={() => setShowCourseForm(true)}
+                >
                   <div
-                    className="flex items-center gap-4 p-5 rounded-2xl mb-6 cursor-pointer group hover:border-gold/30 transition-colors"
-                    style={{ border: '1px dashed rgba(42,34,25,0.15)' }}
-                    onClick={() => setShowCourseForm(true)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-gold transition-colors"
+                    style={{ background: 'rgba(42,34,25,0.06)' }}
                   >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-gold transition-colors"
-                      style={{ background: 'rgba(42,34,25,0.06)' }}
-                    >
-                      <Plus size={16} className="text-espresso" />
-                    </div>
-                    <span className="text-sm text-secondary group-hover:text-espresso transition-colors">
-                      Add New Course
-                    </span>
+                    <Plus size={16} className="text-espresso" />
                   </div>
-                )}
+                  <span className="text-sm text-secondary group-hover:text-espresso transition-colors">
+                    Add New Course
+                  </span>
+                </div>
                 <ContentTable
                   items={courses}
                   onDelete={async (id) => {
@@ -606,6 +738,23 @@ function AdminDashboard({ user, onLogout }) {
                   }}
                 />
               </AdminSection>
+
+              {/* Course Form Drawer */}
+              <CourseForm
+                isOpen={showCourseForm}
+                onClose={() => setShowCourseForm(false)}
+                onSuccess={course => {
+                  setCourses(prev => [
+                    {
+                      ...course,
+                      title: course.title,
+                      meta: `$${course.price} · ${(course.content?.length || 0)} content item${course.content?.length === 1 ? '' : 's'}`,
+                    },
+                    ...prev,
+                  ]);
+                  setShowCourseForm(false);
+                }}
+              />
             </motion.div>
           ) : activeSection === 'stories' ? (
             <motion.div
@@ -805,6 +954,7 @@ export default function AdminPortal() {
     const token = getToken();
 
     if (!token) {
+      logout();
       setLoading(false);
       return;
     }
@@ -812,6 +962,7 @@ export default function AdminPortal() {
     // Quick client-side expiry check before hitting the network
     if (isTokenExpired(token)) {
       clearToken();
+      logout();
       setLoading(false);
       return;
     }
@@ -822,6 +973,7 @@ export default function AdminPortal() {
       if (response.status === 401 || response.status === 403) {
         // Token invalid or revoked in DB — clear it
         clearToken();
+        logout();
         setLoading(false);
         return;
       }
@@ -829,6 +981,7 @@ export default function AdminPortal() {
       if (!response.ok) {
         // Network / server error — fail silently, force re-login
         clearToken();
+        logout();
         setLoading(false);
         return;
       }
@@ -841,14 +994,16 @@ export default function AdminPortal() {
         login(adminData);
       } else {
         clearToken();
+        logout();
       }
     } catch (err) {
       console.error('Token verification error:', err);
       clearToken();
+      logout();
     }
 
     setLoading(false);
-  }, [login]);
+  }, [login, logout]);
 
   useEffect(() => {
     verifyStoredToken();
@@ -876,7 +1031,7 @@ export default function AdminPortal() {
     );
   }
 
-  if (!adminUser && (!user || !isAdmin)) {
+  if (!adminUser && (!user || !isAdmin || !getToken())) {
     return <AdminLogin onLogin={handleAdminLogin} />;
   }
 

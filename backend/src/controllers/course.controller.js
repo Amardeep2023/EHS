@@ -207,6 +207,21 @@ export const capturePurchase = async (req, res) => {
       return res.json({ success: true, message: 'Course access granted' });
     }
 
+    // Idempotency check: if already completed, skip PayPal and return success
+    const user = await User.findOne({
+      _id: req.user.id,
+      'purchasedCourses.paypalOrderId': orderId,
+    }).lean();
+
+    if (user) {
+      const purchase = (user.purchasedCourses || []).find(
+        (p) => p.paypalOrderId === orderId
+      );
+      if (purchase && purchase.paymentStatus === 'completed') {
+        return res.json({ success: true, message: 'Already captured', alreadyCaptured: true });
+      }
+    }
+
     const result = await paypalService.captureOrder(orderId);
 
     if (!result.captured) {
@@ -229,7 +244,12 @@ export const capturePurchase = async (req, res) => {
     res.json({ success: true, message: 'Course access granted' });
   } catch (err) {
     console.error('Capture error:', err);
-    res.status(500).json({ success: false, message: err.message });
+    // If PayPal says ORDER_ALREADY_CAPTURED, treat as success (idempotent)
+    const errorMsg = typeof err.message === 'string' ? err.message : '';
+    if (errorMsg.includes('ORDER_ALREADY_CAPTURED') || errorMsg.includes('DUPLICATE')) {
+      return res.json({ success: true, message: 'Already captured', alreadyCaptured: true });
+    }
+    res.status(500).json({ success: false, message: err.message, alreadyCaptured: false });
   }
 };
 

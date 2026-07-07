@@ -17,6 +17,7 @@ import Academy from './pages/Academy';
 import Courses from './pages/Courses';
 
 import Shop from './pages/Shop';
+import ProductDetail from './pages/ProductDetail';
 import Consultation from './pages/Consultation';
 import UserDashboard from './pages/UserDashboard';
 import AdminPortal from './pages/AdminPortal';
@@ -84,6 +85,7 @@ function App() {
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/free-resources" element={<FreeResources />} />
                     <Route path="/shop" element={<Shop />} />
+                    <Route path="/shop/:productId" element={<ProductDetail />} />
                     <Route path="/consultation" element={<Consultation />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/payment-cancel" element={<PaymentCancel />} />

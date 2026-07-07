@@ -215,7 +215,7 @@ export default function Home() {
     >
       <div className="max-w-lg h-[4/3] aspect-[9/10] rounded-[80px] overflow-hidden shadow-2xl relative">
         <img 
-          src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&q=80&w=800" 
+          src="assets/IMG_0552.jpeg" 
           alt="Clara" 
           className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700"
         />
@@ -244,11 +244,11 @@ export default function Home() {
       whileHover={{ scale: 1.02 }}
       className="group cursor-pointer"
     >
-      <div className="max-w-lg h-4/3 aspect-[9/10] rounded-[80px] overflow-hidden shadow-2xl relative">
+      <div className="max-w-lg h-4/3 aspect-[9/10] rounded-[80px] object-fit overflow-hidden shadow-2xl relative">
         <img 
-          src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=800" 
+          src="assets/IMG_1239.jpeg" 
           alt="Elena" 
-          className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700"
+          className="w-full h-full object-cover object-fit grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#3E2928]/30 via-transparent to-transparent"></div>
       </div>

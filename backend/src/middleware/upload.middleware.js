@@ -12,8 +12,9 @@ const courseDir = path.join(uploadRoot, 'courses');
 const thumbnailDir = path.join(courseDir, 'thumbnails');
 const audioDir = path.join(courseDir, 'audio');
 const pdfDir = path.join(courseDir, 'pdf');
+const productDir = path.join(uploadRoot, 'products');
 
-for (const dir of [uploadRoot, resourceDir, courseDir, thumbnailDir, audioDir, pdfDir]) {
+for (const dir of [uploadRoot, resourceDir, courseDir, thumbnailDir, audioDir, pdfDir, productDir]) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
@@ -25,6 +26,18 @@ const createStorage = (destination) =>
       cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
     },
   });
+
+export const uploadProductImage = multer({
+  storage: createStorage(productDir),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed for product images'), false);
+    }
+  },
+});
 
 export const uploadResource = multer({
   storage: createStorage(resourceDir),

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, ShoppingBag, Calendar, LogOut, Settings, ArrowRight } from 'lucide-react';
+import { BookOpen, ShoppingBag, Calendar, Settings, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { resolveMediaUrl } from '../utils/media';
 
@@ -87,11 +87,6 @@ export default function Dashboard() {
     }
   }, [token]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center pt-20">
@@ -144,48 +139,46 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-50 text-red-600 px-6 py-3 rounded-full font-medium hover:bg-red-100 transition-colors duration-300"
-            >
-              <LogOut size={18} />
-              Logout
-            </button>
+
           </div>
         </motion.div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="max-w-7xl mx-auto px-6 mb-12">
-        <div className="flex flex-wrap gap-4 border-b border-espresso/10 pb-6">
-          {[
-            { id: 'courses', label: 'My Courses', icon: BookOpen },
-            { id: 'sessions', label: 'My Sessions', icon: Calendar },
-            { id: 'products', label: 'My Products', icon: ShoppingBag },
-            { id: 'settings', label: 'Settings', icon: Settings },
-          ].map((tab) => {
-            const TabIcon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 font-medium transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'text-gold border-b-2 border-gold pb-2'
-                    : 'text-espresso/60 hover:text-espresso'
-                }`}
-              >
-                <TabIcon size={20} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Tab Content */}
+      {/* Main layout with sidebar */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Vertical Sidebar */}
+          <aside className="md:w-56 flex-shrink-0">
+            <div className="bg-white rounded-luxury luxury-border overflow-hidden sticky top-28">
+              <nav className="p-3 space-y-1">
+                {[
+                  { id: 'courses', label: 'My Courses', icon: BookOpen },
+                  { id: 'sessions', label: 'My Sessions', icon: Calendar },
+                  { id: 'products', label: 'My Products', icon: ShoppingBag },
+                  { id: 'settings', label: 'Settings', icon: Settings },
+                ].map((tab) => {
+                  const TabIcon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-gold/10 text-gold shadow-sm'
+                          : 'text-secondary hover:text-espresso hover:bg-espresso/5'
+                      }`}
+                    >
+                      <TabIcon size={18} className={activeTab === tab.id ? 'text-gold' : ''} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </aside>
+
+          {/* Tab Content */}
+          <div className="flex-1 min-w-0">
         {/* My Courses Tab */}
         {activeTab === 'courses' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
@@ -468,6 +461,8 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

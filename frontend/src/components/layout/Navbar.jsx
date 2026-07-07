@@ -8,8 +8,9 @@ import GoogleAuthModal from '../common/GoogleAuthModal';
 const navLinks = [
   { label: 'About', to: '/about' },
   { label: 'Courses', to: '/courses' },
-  { label: 'Community', to: '/academy' },
+  { label: 'Community', to: '/community' },
   { label: 'Free Resources', to: '/free-resources' },
+  { label: 'Shop', to: '/shop' },
   { label: 'Testimonials', to: '/success-stories' },
 ];
 
@@ -124,14 +125,12 @@ export default function Navbar() {
                           >
                             <User size={16} /> My Dashboard
                           </Link>
-                          {isAdmin && (
-                            <button
-                              onClick={handleLogout}
-                              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors font-jakarta"
-                            >
-                              <LogOut size={16} /> Logout
-                            </button>
-                          )}
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors font-jakarta"
+                          >
+                            <LogOut size={16} /> Logout
+                          </button>
                         </div>
                       </motion.div>
                     )}
