@@ -108,4 +108,4 @@ export default function PaymentSuccess() {
       </div>
     </div>
   );
-}
+}//comment: This component handles the payment success page. It captures the payment using the orderId and consultationId from the URL parameters, verifies it with the backend, and provides feedback to the user. If successful, it redirects to the dashboard after a short delay.
