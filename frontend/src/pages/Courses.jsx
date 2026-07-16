@@ -6,7 +6,7 @@ import axios from 'axios';
 import { resolveMediaUrl } from '../utils/media.js';
 import { getPriceForCourse, formatPrice } from '../utils/pricing';
 import { useCountryPricing } from '../context/CountryPricingContext';
-
+//comment out the following line if you want to use the default API URL
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Courses() {

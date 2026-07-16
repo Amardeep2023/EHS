@@ -179,7 +179,8 @@ export const initiatePurchase = async (req, res) => {
       (purchase) => purchase.courseId?.toString() !== courseId
     );
 
-    const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+    // Support both localhost and Render URLs
+    const CLIENT_URL = process.env.CLIENT_URL || process.env.RENDER_FRONTEND_URL || 'http://localhost:5173';
 
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
       const localOrderId = `local-${courseId}-${Date.now()}`;
