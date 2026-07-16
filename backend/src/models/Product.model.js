@@ -7,6 +7,11 @@ const productSchema = new mongoose.Schema(
     description: { type: String, required: true },
     fullDescription: { type: String, default: '' },
     price: { type: Number, required: true },
+    countryPrices: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
     category: { type: String, enum: ['Journals', 'Workbooks', 'Guides', 'Planners', 'Cards'], required: true },
     coverImage: { type: String, default: '' },
     fileUrl: { type: String, default: '' },

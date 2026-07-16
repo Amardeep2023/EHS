@@ -1,113 +1,63 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Linkedin } from 'lucide-react';
-
-const navCol1 = [
-  { label: 'Home', to: '/' },
-  { label: 'About Us', to: '/about' },
-  { label: 'Success Stories', to: '/success-stories' },
-  { label: 'Free Resources', to: '/free-resources' },
-];
-
-const navCol2 = [
-  { label: 'The Academy', to: '/academy' },
-  { label: 'Shop', to: '/shop' },
-  { label: 'Consultation', to: '/consultation' },
-  { label: 'Dashboard', to: '/dashboard' },
-];
+import { Instagram, Youtube, Mail } from 'lucide-react';
+import logoehs from '../../assets/logoehs.png';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#FAF8F3] text-[#3B2C1A] font-opensans border-t border-white/30">
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-12 gap-8 mb-16">
-          {/* Logo */}
-          <div className="col-span-12 md:col-span-4">
-            <div className="font-braven italic font-bold text-4xl text-[#4B6A4A] mb-4 leading-tight">
-              Embracing<br />Higher Self
+    <footer className="pt-32 pb-12 px-6 bg-[#E3F2FD]/80 backdrop-blur-md border-t border-[#3E2928]/20">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
+          <div className="col-span-1 md:col-span-1">
+            <div className="w-16 h-16 rounded-full border border-[#3E2928] flex items-center justify-center mb-8">
+              <span className="font-serif text-2xl font-bold text-[#3E2928]"> <img 
+                              src={logoehs} 
+                              alt="Embracing Higher Self Logo" 
+                              className="w-full h-full object-cover rounded-full"
+                            /></span>
             </div>
-            <p className="text-[#3B2C1A]/70 text-sm leading-relaxed max-w-xs font-opensans">
-              A sanctuary for manifestation, growth, and conscious living.
+            <p className="text-[#3E2928]/60 leading-relaxed text-sm">
+              Curating the world's most elegant manifestation experiences. Elevate your presence through the art of conscious being.
             </p>
-            <div className="flex items-center gap-4 mt-6">
-              <a href="#" className="text-[#4B6A4A]/60 hover:text-[#4B6A4A] transition-all hover:scale-110">
-                <Instagram size={18} />
-              </a>
-              <a href="#" className="text-[#4B6A4A]/60 hover:text-[#4B6A4A] transition-all hover:scale-110">
-                <Twitter size={18} />
-              </a>
-              <a href="#" className="text-[#4B6A4A]/60 hover:text-[#4B6A4A] transition-all hover:scale-110">
-                <Linkedin size={18} />
-              </a>
-            </div>
           </div>
-
-          {/* Nav columns */}
-          <div className="col-span-6 md:col-span-2">
-            <p className="text-label text-[#4B6A4A] mb-6 font-jakarta">Explore</p>
-            <ul className="space-y-3">
-              {navCol1.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-[#3B2C1A]/60 hover:text-[#3B2C1A] transition-colors font-opensans">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+          <div className="space-y-8">
+            <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">The Collection</h4>
+            <ul className="space-y-4 text-xs tracking-widest text-[#3E2928]/50 uppercase">
+              <li><Link to="/about" className="hover:text-[#D4AF37] transition-all">About Us</Link></li>
+              <li><Link to="/academy" className="hover:text-[#D4AF37] transition-all">Courses</Link></li>
+              <li><Link to="/success-stories" className="hover:text-[#D4AF37] transition-all">Testimonials</Link></li>
+              <li><Link to="/free-resources" className="hover:text-[#D4AF37] transition-all">Community</Link></li>
             </ul>
           </div>
-
-          <div className="col-span-6 md:col-span-2">
-            <p className="text-label text-[#4B6A4A] mb-6 font-jakarta">Learn</p>
-            <ul className="space-y-3">
-              {navCol2.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-[#3B2C1A]/60 hover:text-[#3B2C1A] transition-colors font-opensans">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+          <div className="space-y-8">
+            <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">Essential</h4>
+            <ul className="space-y-4 text-xs tracking-widest text-[#3E2928]/50 uppercase">
+              <li><Link to="/about" className="hover:text-[#D4AF37] transition-all">Privacy</Link></li>
+              <li><Link to="/about" className="hover:text-[#D4AF37] transition-all">Terms</Link></li>
+              <li><Link to="/consultation" className="hover:text-[#D4AF37] transition-all">Connect</Link></li>
             </ul>
           </div>
-
-          {/* Newsletter */}
-          <div className="col-span-12 md:col-span-4">
-            <p className="text-label text-[#4B6A4A] mb-4 font-jakarta">Stay Connected</p>
-            <div
-              className="rounded-2xl p-6"
-              style={{ background: 'rgba(75,106,74,0.05)', border: '1px solid rgba(75,106,74,0.1)' }}
-            >
-              <p className="text-sm text-[#3B2C1A]/70 mb-4 font-opensans">
-                Receive insights, new resources, and transformational guidance.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="flex-1 bg-white/50 text-[#3B2C1A] placeholder-[#3B2C1A]/30 text-sm rounded-xl px-4 py-2.5 outline-none border border-[#4B6A4A]/10 focus:border-[#4B6A4A]/50 transition-colors font-opensans"
-                />
-                <button className="bg-[#4B6A4A] text-white text-nav px-4 py-2.5 rounded-xl hover:bg-[#3B2C1A] transition-colors whitespace-nowrap font-jakarta">
-                  Join
-                </button>
-              </div>
+          <div className="space-y-8">
+            <h4 className="text-[#3E2928] uppercase text-xs tracking-[0.3em] font-bold">Frequency</h4>
+            <div className="flex space-x-6">
+              <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                <Instagram className="w-6 h-6" />
+              </a>
+              <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                <Youtube className="w-6 h-6" />
+              </a>
+              <a href="#" className="text-[#3E2928]/40 hover:text-[#D4AF37] transition-colors">
+                <Mail className="w-6 h-6" />
+              </a>
             </div>
           </div>
         </div>
-
-        {/* Bottom bar */}
-        <div
-          className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ borderTop: '1px solid rgba(75,106,74,0.08)' }}
-        >
-          <p className="text-[#3B2C1A]/40 text-xs tracking-widest2 font-jakarta">
-            © {new Date().getFullYear()} EMBRACINGHIGHERSELF. ALL RIGHTS RESERVED.
+        <div className="flex flex-col md:flex-row justify-between items-center border-t border-[#3E2928]/5 pt-10">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-[#3E2928]/40 mb-4 md:mb-0">
+            © {new Date().getFullYear()} Embracing Higher Self. The Gold Standard of Being.
           </p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-[#3B2C1A]/40 text-xs tracking-widest2 hover:text-[#3B2C1A]/60 transition-colors font-jakarta">
-              Privacy Policy
-            </a>
-            <a href="#" className="text-[#3B2C1A]/40 text-xs tracking-widest2 hover:text-[#3B2C1A]/60 transition-colors font-jakarta">
-              Terms of Service
-            </a>
-          </div>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-[#3E2928]/40">
+            Designed for the Elevated Soul.
+          </p>
         </div>
       </div>
     </footer>

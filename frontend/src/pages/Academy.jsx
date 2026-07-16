@@ -6,11 +6,14 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import ConfirmDeleteModal from '../components/common/ConfirmDeleteModal';
 import { resolveMediaUrl } from '../utils/media';
+import { getPriceForCourse, formatPrice } from '../utils/pricing';
+import { useCountryPricing } from '../context/CountryPricingContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Academy() {
   const { user, isAdmin } = useAuth();
+  const { countryCode } = useCountryPricing();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,6 +39,7 @@ export default function Academy() {
       title: apiCourse.title,
       description: apiCourse.shortDescription || apiCourse.description || '',
       price: apiCourse.price,
+      countryPrices: apiCourse.countryPrices || {},
       duration,
       lessons: apiCourse.totalDays, // Each day is a lesson
       students: apiCourse.enrollmentCount || 0,
@@ -184,7 +188,7 @@ export default function Academy() {
                       className="font-boska text-2xl text-espresso"
                       style={{ fontFamily: 'Boska, Georgia, serif' }}
                     >
-                      ${course.price}
+                      {formatPrice(getPriceForCourse(course, countryCode))}
                     </span>
                     <div 
                       className="flex items-center gap-2 bg-espresso text-cream px-6 py-2.5 rounded-full text-sm group-hover:bg-gold group-hover:text-espresso transition-all duration-300"

@@ -106,7 +106,7 @@ export default function Home() {
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="flex flex-col items-center w-full max-w-7xl"
         >
-          <div className="relative w-96 h-96 md:w-96 md:h-96 mb-10 warm-glow ph:w-64 ph:h-64">
+          <div className="relative w-80 h-80 md:w-96 md:h-96 mb-10 warm-glow ph:w-64 ph:h-64">
             <div className="w-full h-full rounded-full  overflow-hidden p-1  backdrop-blur-sm">
               <img 
                 src={logoehs} 
@@ -133,7 +133,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col items-center space-y-6">
-            <Link to="/academy" className="px-14 py-5 bg-[#3E2928] text-white rounded-full font-bold tracking-[0.2em] uppercase text-sm hover:scale-105 transition-transform shadow-xl">
+            <Link to="/courses" className="px-14 py-5 bg-[#3E2928] text-white rounded-full font-bold tracking-[0.2em] uppercase text-sm hover:scale-105 transition-transform shadow-xl">
               Enter the Sanctuary
             </Link>
             <Link to="/about" className="text-xs uppercase tracking-widest border-b border-[#3E2928]/20 pb-1 hover:border-[#D4AF37] transition-all">
@@ -307,7 +307,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer 
       <footer className="pt-32 pb-12 px-6 bg-[#E3F2FD]/80 backdrop-blur-md border-t border-[#3E2928]/20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
@@ -357,7 +357,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
+     */}
       {/* Video Modal - Kept from original functionality */}
       <AnimatePresence>
         {activeVideo && (

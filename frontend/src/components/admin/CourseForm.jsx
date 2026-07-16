@@ -1,6 +1,72 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Plus, Loader, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Plus, Loader, Image as ImageIcon, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+
+// ── Pre-populated country list for location-based pricing ────────
+const COMMON_COUNTRIES = [
+  { code: 'US', name: 'United States (USD)' },
+  { code: 'IN', name: 'India (INR)' },
+  { code: 'CA', name: 'Canada (CAD)' },
+  { code: 'GB', name: 'United Kingdom (GBP)' },
+  { code: 'AU', name: 'Australia (AUD)' },
+  { code: 'EU', name: 'Europe (EUR)' },
+];
+
+const ALL_COUNTRIES = [
+  ...COMMON_COUNTRIES,
+  { code: 'AE', name: 'United Arab Emirates (AED)' },
+  { code: 'AR', name: 'Argentina (ARS)' },
+  { code: 'AT', name: 'Austria (EUR)' },
+  { code: 'BE', name: 'Belgium (EUR)' },
+  { code: 'BG', name: 'Bulgaria (BGN)' },
+  { code: 'BR', name: 'Brazil (BRL)' },
+  { code: 'CH', name: 'Switzerland (CHF)' },
+  { code: 'CL', name: 'Chile (CLP)' },
+  { code: 'CN', name: 'China (CNY)' },
+  { code: 'CO', name: 'Colombia (COP)' },
+  { code: 'CZ', name: 'Czech Republic (CZK)' },
+  { code: 'DE', name: 'Germany (EUR)' },
+  { code: 'DK', name: 'Denmark (DKK)' },
+  { code: 'EG', name: 'Egypt (EGP)' },
+  { code: 'ES', name: 'Spain (EUR)' },
+  { code: 'FI', name: 'Finland (EUR)' },
+  { code: 'FR', name: 'France (EUR)' },
+  { code: 'GR', name: 'Greece (EUR)' },
+  { code: 'HK', name: 'Hong Kong (HKD)' },
+  { code: 'HU', name: 'Hungary (HUF)' },
+  { code: 'ID', name: 'Indonesia (IDR)' },
+  { code: 'IE', name: 'Ireland (EUR)' },
+  { code: 'IL', name: 'Israel (ILS)' },
+  { code: 'IS', name: 'Iceland (ISK)' },
+  { code: 'IT', name: 'Italy (EUR)' },
+  { code: 'JP', name: 'Japan (JPY)' },
+  { code: 'KR', name: 'South Korea (KRW)' },
+  { code: 'LU', name: 'Luxembourg (EUR)' },
+  { code: 'MX', name: 'Mexico (MXN)' },
+  { code: 'MY', name: 'Malaysia (MYR)' },
+  { code: 'NG', name: 'Nigeria (NGN)' },
+  { code: 'NL', name: 'Netherlands (EUR)' },
+  { code: 'NO', name: 'Norway (NOK)' },
+  { code: 'NZ', name: 'New Zealand (NZD)' },
+  { code: 'PH', name: 'Philippines (PHP)' },
+  { code: 'PL', name: 'Poland (PLN)' },
+  { code: 'PT', name: 'Portugal (EUR)' },
+  { code: 'QA', name: 'Qatar (QAR)' },
+  { code: 'RO', name: 'Romania (RON)' },
+  { code: 'RU', name: 'Russia (RUB)' },
+  { code: 'SA', name: 'Saudi Arabia (SAR)' },
+  { code: 'SE', name: 'Sweden (SEK)' },
+  { code: 'SG', name: 'Singapore (SGD)' },
+  { code: 'TH', name: 'Thailand (THB)' },
+  { code: 'TR', name: 'Turkey (TRY)' },
+  { code: 'TW', name: 'Taiwan (TWD)' },
+  { code: 'VN', name: 'Vietnam (VND)' },
+  { code: 'ZA', name: 'South Africa (ZAR)' },
+];
+
+function createCountryPriceEntry(code = '', price = '') {
+  return { id: Date.now() + Math.random(), code, price };
+}
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 const getToken = () => localStorage.getItem('admin_token');
@@ -22,24 +88,84 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(course?.thumbnail || '');
   const [contentItems, setContentItems] = useState([createEmptyItem()]);
+  const [countryPrices, setCountryPrices] = useState(
+    course?.countryPrices
+      ? Object.entries(course.countryPrices).map(([code, price]) =>
+          createCountryPriceEntry(code, price)
+        )
+      : []
+  );
+  const [locationPricingOpen, setLocationPricingOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const thumbnailInputRef = useRef(null);
 
-  // Reset form on open
+  // ── Country price handlers ──────────────────────────────────────
+  const addCountryPrice = () => {
+    setCountryPrices((prev) => [...prev, createCountryPriceEntry()]);
+  };
+
+  const removeCountryPrice = (id) => {
+    setCountryPrices((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const updateCountryPrice = (id, field, value) => {
+    setCountryPrices((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
+  // Reset / initialize form on open
   useEffect(() => {
-    if (isOpen && !course) {
-      setTitle('');
-      setDescription('');
-      setShortDescription('');
-      setPrice(0);
-      setThumbnailFile(null);
-      setThumbnailPreview('');
-      setContentItems([createEmptyItem()]);
-      setError('');
-      setSuccess('');
+    if (isOpen) {
+      if (course) {
+        // ── Edit mode — pre-populate all fields from the course ──
+        setTitle(course.title || '');
+        setDescription(course.description || '');
+        setShortDescription(course.shortDescription || '');
+        setPrice(course.price || 0);
+        setCountryPrices(
+          course.countryPrices
+            ? Object.entries(course.countryPrices).map(([code, price]) =>
+                createCountryPriceEntry(code, price)
+              )
+            : []
+        );
+        setLocationPricingOpen(false);
+        setThumbnailFile(null);
+        setThumbnailPreview(course.thumbnail || '');
+        setContentItems(
+          (course.content || []).length > 0
+            ? (course.content || []).map((item) => ({
+                id: Date.now() + Math.random(),
+                title: item.title || '',
+                audioTitle: item.audioTitle || '',
+                pdfTitle: item.pdfTitle || '',
+                audioFile: null,
+                pdfFile: null,
+                audioUrl: item.audioUrl || '',
+                pdfUrl: item.pdfUrl || '',
+              }))
+            : [createEmptyItem()]
+        );
+        setError('');
+        setSuccess('');
+      } else {
+        // ── Create mode — reset everything ──
+        setTitle('');
+        setDescription('');
+        setShortDescription('');
+        setPrice(0);
+        setCountryPrices([]);
+        setLocationPricingOpen(false);
+        setThumbnailFile(null);
+        setThumbnailPreview('');
+        setContentItems([createEmptyItem()]);
+        setError('');
+        setSuccess('');
+      }
     }
   }, [isOpen, course]);
 
@@ -141,11 +267,20 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
       const assets = await uploadCourseAssets();
       setUploading(false);
 
-      const payload = {
+      // Convert countryPrices array to object for the API
+      const countryPricesObj = {};
+      countryPrices.forEach((item) => {
+        if (item.code && item.price !== '' && Number(item.price) > 0) {
+          countryPricesObj[item.code] = Number(item.price);
+        }
+      });
+
+const payload = {
         title,
         description,
         shortDescription: shortDescription || description,
         price: Number(price),
+        countryPrices: Object.keys(countryPricesObj).length > 0 ? countryPricesObj : undefined,
         thumbnail: assets.thumbnailUrl || '',
         content: assets.contentItems.map((item) => ({
           title: item.title || 'Lesson Content',
@@ -156,8 +291,12 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
         })),
       };
 
-      const response = await fetch(`${API_URL}/courses`, {
-        method: 'POST',
+      const isEditing = !!(course && course._id);
+      const url = isEditing ? `${API_URL}/courses/${course._id}` : `${API_URL}/courses`;
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -165,9 +304,9 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Course creation failed');
+      if (!response.ok) throw new Error(data.message || (isEditing ? 'Course update failed' : 'Course creation failed'));
 
-      setSuccess('Course created successfully!');
+      setSuccess(isEditing ? 'Course updated successfully!' : 'Course created successfully!');
       onSuccess?.(data.course || data);
       setTimeout(() => onClose?.(), 1200);
     } catch (err) {
@@ -294,9 +433,9 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
                   />
                 </div>
 
-                {/* Price */}
+                {/* Default Price */}
                 <div>
-                  <label className="block text-sm font-medium text-espresso mb-2">Price (USD) *</label>
+                  <label className="block text-sm font-medium text-espresso mb-2">Default Price (USD) *</label>
                   <input
                     type="number"
                     min="1"
@@ -307,6 +446,105 @@ export default function CourseForm({ isOpen, onClose, course = null, onSuccess }
                     placeholder="47"
                     className="w-full rounded-2xl border border-espresso/15 bg-white px-5 py-3.5 text-sm text-espresso placeholder-secondary/40 focus:outline-none focus:border-gold/50 transition-colors"
                   />
+                  <p className="text-xs text-secondary mt-1.5">
+                    Fallback price shown to all countries unless overridden below.
+                  </p>
+                </div>
+
+                {/* Location-Based Pricing */}
+                <div className="rounded-2xl border border-espresso/10 bg-white/40">
+                  <button
+                    type="button"
+                    onClick={() => setLocationPricingOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-espresso hover:bg-white/50 transition-colors rounded-2xl"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Globe size={16} className="text-gold" />
+                      Location-Based Pricing
+                    </span>
+                    {locationPricingOpen ? (
+                      <ChevronUp size={16} className="text-secondary" />
+                    ) : (
+                      <ChevronDown size={16} className="text-secondary" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {locationPricingOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 space-y-3">
+                          <p className="text-xs text-secondary">
+                            Set country-specific prices. If a country isn't listed, the default price will be used.
+                          </p>
+
+                          {countryPrices.length === 0 && (
+                            <div className="py-6 text-center text-xs text-secondary bg-cream/50 rounded-xl">
+                              No location prices set. Click "Add Location" to add one.
+                            </div>
+                          )}
+
+                          {countryPrices.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="flex items-center gap-3"
+                            >
+                              {/* Country dropdown */}
+                              <select
+                                value={entry.code}
+                                onChange={(e) => updateCountryPrice(entry.id, 'code', e.target.value)}
+                                className="flex-1 rounded-xl border border-espresso/15 bg-white px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-gold/50 transition-colors appearance-none cursor-pointer"
+                              >
+                                <option value="" disabled>Select country</option>
+                                {ALL_COUNTRIES.filter(
+                                  (c) => c.code === entry.code || !countryPrices.some((cp) => cp.code === c.code && cp.id !== entry.id)
+                                ).map((c) => (
+                                  <option key={c.code} value={c.code}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Price input */}
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={entry.price}
+                                onChange={(e) => updateCountryPrice(entry.id, 'price', e.target.value)}
+                                placeholder="Price"
+                                className="w-28 rounded-xl border border-espresso/15 bg-white px-3 py-2.5 text-sm text-espresso placeholder-secondary/40 focus:outline-none focus:border-gold/50 transition-colors"
+                              />
+
+                              {/* Remove button */}
+                              <button
+                                type="button"
+                                onClick={() => removeCountryPrice(entry.id)}
+                                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                                title="Remove location"
+                              >
+                                <X size={15} />
+                              </button>
+                            </div>
+                          ))}
+
+                          {/* Add button */}
+                          <button
+                            type="button"
+                            onClick={addCountryPrice}
+                            className="flex items-center gap-2 text-xs text-gold font-medium hover:text-espresso transition-colors pt-1"
+                          >
+                            <Plus size={14} /> Add Location
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Lesson Content */}

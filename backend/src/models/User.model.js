@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, select: false },
     googleId: { type: String },
     avatar: { type: String },
+    country: { type: String, default: '' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     purchasedCourses: [
       {

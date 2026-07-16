@@ -80,7 +80,8 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess }) {
         setSuccess('Login successful! Redirecting...');
 
         setTimeout(() => {
-          onSuccess?.();
+          // Pass locale from Google auth response
+          onSuccess?.(data.locale || null);
           onClose();
         }, 1500);
       } else {
@@ -153,7 +154,7 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+            className="fixed mx-96 my-36 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
           >
             <div
               className="bg-white rounded-2xl shadow-2xl p-8"

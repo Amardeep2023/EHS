@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, User, LogOut, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import GoogleAuthModal from '../common/GoogleAuthModal';
+import { useCountryPricing } from '../../context/CountryPricingContext';
+import { getStoredCountry } from '../../utils/pricing';
+import { useCart } from '../../context/CartContext';
+
 
 const navLinks = [
   { label: 'About', to: '/about' },
@@ -20,6 +24,8 @@ export default function Navbar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const { user, logout, isLoggedIn, isAdmin } = useAuth();
+  const { trySetCountryFromLocale, showCountrySelector } = useCountryPricing();
+  const { count: cartCount } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,14 +46,31 @@ export default function Navbar() {
     navigate('/');
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = (locale) => {
+    // Try to detect country from Google's locale first
+    if (locale) {
+      const success = trySetCountryFromLocale(locale);
+      if (success) {
+        // Country was auto-detected from locale — no modal needed
+        navigate('/');
+        return;
+      }
+    }
+
+    // Check if user already has a country (either in their profile or in localStorage)
+    const alreadyHasCountry = user?.country || getStoredCountry();
+    if (!alreadyHasCountry) {
+      // No country set yet — show the selector
+      showCountrySelector();
+    }
+
     navigate('/');
   };
 
   return (
     <>
       <header
-        className={` top-0 left-0 right-0 z-50 h-20 transition-all duration-500 ${
+        className={`sticky top-0 left-0 right-0 z-50 h-20 transition-all duration-500 ${
           scrolled ? 'bg-cream/90 backdrop-blur-xl shadow-luxury' : 'bg-cream/80 backdrop-blur-xl'
         } luxury-border-b`}
         style={{ borderBottom: '1px solid rgba(42,34,25,0.08)' }}
@@ -86,7 +109,7 @@ export default function Navbar() {
           </nav>
 
           {/* Right side */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
               <>
                 {/* Profile Picture & Menu */}
@@ -121,6 +144,10 @@ export default function Navbar() {
                         <div className="p-2">
                           <Link
                             to="/dashboard"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfileMenuOpen(false);
+                            }}
                             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-secondary hover:text-espresso hover:bg-cream/50 transition-colors font-jakarta"
                           >
                             <User size={16} /> My Dashboard
@@ -158,10 +185,17 @@ export default function Navbar() {
             {/* Cart Button */}
             <Link
               to="/cart"
-              className="flex items-center gap-2 text-nav text-[#2A2219] hover:text-[#4B6A4A] transition-colors"
+              className="relative flex items-center gap-2 text-nav text-[#2A2219] hover:text-[#4B6A4A] transition-colors"
               style={{ fontSize: '10px', letterSpacing: '0.2em' }}
             >
-              <ShoppingCart size={18} />
+              <span className="relative">
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-4 h-4 bg-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </span>
               <span>Cart</span>
             </Link>
           </div>
@@ -249,11 +283,17 @@ export default function Navbar() {
 
               <Link
                 to="/cart"
-                className="flex items-center gap-2 text-nav text-[#2A2219] hover:text-[#4B6A4A] transition-colors py-2"
+                onClick={() => setMobileOpen(false)}
+                className="relative flex items-center gap-2 text-nav text-[#2A2219] hover:text-[#4B6A4A] transition-colors py-2"
                 style={{ fontSize: '10px', letterSpacing: '0.2em' }}
               >
                 <ShoppingCart size={18} />
                 <span>Cart</span>
+                {cartCount > 0 && (
+                  <span className="w-4 h-4 bg-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center ml-1">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
               </Link>
             </nav>
           </motion.div>

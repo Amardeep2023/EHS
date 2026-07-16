@@ -5,6 +5,8 @@ import { ArrowLeft, ShoppingCart, Loader, LogIn, AlertCircle } from 'lucide-reac
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import GoogleAuthModal from '../components/common/GoogleAuthModal';
+import { useCountryPricing } from '../context/CountryPricingContext';
+import { getPriceForCourse, formatPrice } from '../utils/pricing';
 
 export default function Checkout() {
   const { courseId } = useParams();
@@ -16,6 +18,7 @@ export default function Checkout() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const { countryCode, getPrice, formatPrice } = useCountryPricing();
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -175,7 +178,7 @@ export default function Checkout() {
                   <p className="text-sm text-secondary mt-2 line-clamp-2">{course.shortDescription || course.description}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="font-boska text-2xl text-espresso">${course.price}</p>
+                  <p className="font-boska text-2xl text-espresso">{formatPrice(getPrice(course))}</p>
                   <p className="text-xs text-secondary">one-time</p>
                 </div>
               </div>
@@ -213,7 +216,7 @@ export default function Checkout() {
               <div className="rounded-2xl bg-gold/5 border border-gold/20 p-4">
                 <p className="text-xs text-gold font-medium mb-1">Secure Payment</p>
                 <p className="text-xs text-secondary">
-                  You will be redirected to PayPal to securely complete your payment of <strong>${course.price}</strong>.
+                  You will be redirected to PayPal to securely complete your payment of <strong>{formatPrice(getPrice(course))}</strong>.
                 </p>
               </div>
 
@@ -225,7 +228,7 @@ export default function Checkout() {
                 {processing ? (
                   <><Loader size={16} className="animate-spin" /> Processing...</>
                 ) : (
-                  <><ShoppingCart size={16} /> Pay ${course.price} with PayPal</>
+                  <><ShoppingCart size={16} /> Pay {formatPrice(getPrice(course))} with PayPal</>
                 )}
               </button>
             </form>
@@ -242,11 +245,11 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between">
                 <span>Price</span>
-                <span className="text-espresso">${course.price}</span>
+                <span className="text-espresso">{formatPrice(getPrice(course))}</span>
               </div>
               <div className="flex justify-between font-semibold text-espresso pt-3 border-t border-espresso/10">
                 <span>Total</span>
-                <span>${course.price}</span>
+                <span>{formatPrice(getPrice(course))}</span>
               </div>
             </div>
 

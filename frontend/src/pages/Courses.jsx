@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, Clock, BookOpen, Users } from 'lucide-react';
 import axios from 'axios';
 import { resolveMediaUrl } from '../utils/media.js';
+import { getPriceForCourse, formatPrice } from '../utils/pricing';
+import { useCountryPricing } from '../context/CountryPricingContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Courses() {
   const navigate = useNavigate();
+  const { countryCode } = useCountryPricing();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,6 +26,7 @@ export default function Courses() {
           title: course.title,
           description: course.shortDescription || course.description || '',
           price: course.price,
+          countryPrices: course.countryPrices || {},
           duration: `${Math.max(1, Math.ceil((course.totalDays || 1) / 7))} week${Math.ceil((course.totalDays || 1) / 7) > 1 ? 's' : ''}`,
           lessons: course.content?.length || course.totalDays || 1,
           students: course.enrollmentCount || 0,
@@ -42,9 +46,9 @@ export default function Courses() {
   };
 
   return (
-    <main className="pt-20 overflow-hidden">
-      <section className="py-28 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+    <main className="pt-20 overflow-hidden ">
+      <section className="py-28 px-6 ">
+        <div className="max-w-4xl mx-auto text-center  bg-cream/65 backdrop-blur-[6px] rounded-luxury luxury-border p-12">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,7 +124,7 @@ export default function Courses() {
                     className="font-boska text-2xl text-espresso"
                     style={{ fontFamily: 'Boska, Georgia, serif' }}
                   >
-                    ${course.price}
+                    {formatPrice(getPriceForCourse(course, countryCode), countryCode)}
                   </span>
                   <button
                     type="button"

@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CountryPricingProvider, useCountryPricing } from './context/CountryPricingContext';
+import CountrySelectorModal from './components/common/CountrySelectorModal';
+import { CartProvider } from './context/CartContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -18,6 +21,7 @@ import Courses from './pages/Courses';
 
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
+import CartPage from './pages/CartPage';
 import Consultation from './pages/Consultation';
 import UserDashboard from './pages/UserDashboard';
 import AdminPortal from './pages/AdminPortal';
@@ -26,9 +30,17 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import CourseForm from './components/admin/CourseForm';
 import UploadFreeCourseForm from './pages/UploadFreeCourseForm';
 
-function App() {
+function AppContent() {
+  const { showSelector, changeCountry } = useCountryPricing();
+
   return (
-    <AuthProvider>
+    <>
+      {/* Country selector modal — shown on first visit, covers all routes */}
+      <CountrySelectorModal
+        isOpen={showSelector}
+        onSelect={changeCountry}
+      />
+
       <Router>
         <div className="min-h-screen font-satoshi relative overflow-x-hidden">
           {/* Global Beach Background */}
@@ -84,6 +96,7 @@ function App() {
                     <Route path="/checkout/:courseId" element={<Checkout />} />
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/free-resources" element={<FreeResources />} />
+                    <Route path="/cart" element={<CartPage />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/shop/:productId" element={<ProductDetail />} />
                     <Route path="/consultation" element={<Consultation />} />
@@ -115,6 +128,18 @@ function App() {
           </Routes>
         </div>
       </Router>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <CountryPricingProvider>
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
+      </CountryPricingProvider>
     </AuthProvider>
   );
 }

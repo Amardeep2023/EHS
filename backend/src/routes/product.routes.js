@@ -40,13 +40,35 @@ router.post('/upload', protect, adminOnly, (req, res) => {
 
 // Admin: create product
 router.post('/', protect, adminOnly, async (req, res) => {
-  const product = await Product.create(req.body);
+  const payload = { ...req.body };
+  // Parse countryPrices if provided
+  const parsedCountryPrices = {};
+  if (payload.countryPrices && typeof payload.countryPrices === 'object') {
+    for (const [code, val] of Object.entries(payload.countryPrices)) {
+      if (code && val !== undefined && val !== null && val !== '') {
+        parsedCountryPrices[code] = Number(val);
+      }
+    }
+  }
+  payload.countryPrices = Object.keys(parsedCountryPrices).length > 0 ? parsedCountryPrices : {};
+  const product = await Product.create(payload);
   res.status(201).json({ success: true, product });
 });
 
 // Admin: update product
 router.put('/:id', protect, adminOnly, async (req, res) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const payload = { ...req.body };
+  // Parse countryPrices if provided
+  if (payload.countryPrices && typeof payload.countryPrices === 'object') {
+    const parsed = {};
+    for (const [code, val] of Object.entries(payload.countryPrices)) {
+      if (code && val !== undefined && val !== null && val !== '') {
+        parsed[code] = Number(val);
+      }
+    }
+    payload.countryPrices = Object.keys(parsed).length > 0 ? parsed : {};
+  }
+  const product = await Product.findByIdAndUpdate(req.params.id, payload, { new: true });
   res.json({ success: true, product });
 });
 

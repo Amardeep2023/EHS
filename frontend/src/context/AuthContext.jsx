@@ -56,6 +56,13 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUserCountry = (countryCode) => {
+    if (!user) return;
+    const updatedUser = { ...user, country: countryCode };
+    setUser(updatedUser);
+    localStorage.setItem('ehs_user', JSON.stringify(updatedUser));
+  };
+
   const isAdmin = user?.role === 'admin';
   const isLoggedIn = !!user && !!token;
 
@@ -66,6 +73,7 @@ export function AuthProvider({ children }) {
         token,
         login,
         logout,
+        updateUserCountry,
         loading,
         isAdmin,
         isLoggedIn,

@@ -256,7 +256,7 @@ function AdminSection({ title, children }) {
 }
 
 // ── Content Table ────────────────────────────────────────────────
-function ContentTable({ items, onDelete }) {
+function ContentTable({ items, onDelete, onEdit }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -267,9 +267,14 @@ function ContentTable({ items, onDelete }) {
               <td className="py-3 pr-4 text-secondary hidden md:table-cell">{item.meta}</td>
               <td className="py-3 pl-4 text-right">
                 <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 rounded-lg hover:bg-gold/10 text-gold transition-colors">
-                    <Edit size={13} />
-                  </button>
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(item._id)}
+                      className="p-1.5 rounded-lg hover:bg-gold/10 text-gold transition-colors"
+                    >
+                      <Edit size={13} />
+                    </button>
+                  )}
                   <button
                     onClick={() => onDelete(item._id)}
                     className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 transition-colors"
@@ -296,6 +301,7 @@ function AdminDashboard({ user, onLogout }) {
 
   const [courses, setCourses] = useState([]);
   const [showCourseForm, setShowCourseForm] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
   const [products, setProducts] = useState([]);
   const [resources, setResources] = useState([]);
@@ -723,7 +729,16 @@ function AdminDashboard({ user, onLogout }) {
                 </div>
                 <ContentTable
                   items={courses}
+                  onEdit={(id) => {
+                    const course = courses.find(c => c._id === id);
+                    if (course) {
+                      setEditingCourse(course);
+                      setShowCourseForm(true);
+                    }
+                  }}
                   onDelete={async (id) => {
+                    const course = courses.find(c => c._id === id);
+                    if (!window.confirm(`Are you sure you want to delete "${course?.title || 'this course'}"? This cannot be undone.`)) return;
                     try {
                       const token = getToken();
                       const res = await fetch(`${API_URL}/courses/${id}`, {
@@ -742,17 +757,27 @@ function AdminDashboard({ user, onLogout }) {
               {/* Course Form Drawer */}
               <CourseForm
                 isOpen={showCourseForm}
-                onClose={() => setShowCourseForm(false)}
-                onSuccess={course => {
-                  setCourses(prev => [
-                    {
-                      ...course,
-                      title: course.title,
-                      meta: `$${course.price} · ${(course.content?.length || 0)} content item${course.content?.length === 1 ? '' : 's'}`,
-                    },
-                    ...prev,
-                  ]);
+                onClose={() => {
                   setShowCourseForm(false);
+                  setEditingCourse(null);
+                }}
+                course={editingCourse}
+                onSuccess={updatedCourse => {
+                  setCourses(prev => {
+                    const exists = prev.some(c => c._id === updatedCourse._id);
+                    const formatted = {
+                      ...updatedCourse,
+                      meta: `$${updatedCourse.price} · ${(updatedCourse.content?.length || 0)} content item${updatedCourse.content?.length === 1 ? '' : 's'}`,
+                    };
+                    if (exists) {
+                      // Update existing course in the list
+                      return prev.map(c => c._id === updatedCourse._id ? formatted : c);
+                    }
+                    // New course — add to top
+                    return [formatted, ...prev];
+                  });
+                  setShowCourseForm(false);
+                  setEditingCourse(null);
                 }}
               />
             </motion.div>

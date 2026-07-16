@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Image as ImageIcon, Loader } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader, Globe, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 const TOKEN_KEY = 'admin_token';
@@ -10,6 +10,26 @@ function getToken() {
 }
 
 const categories = ['Journals', 'Workbooks', 'Guides', 'Planners', 'Cards'];
+
+const ALL_COUNTRIES = [
+  { code: 'US', name: 'United States (USD)' },
+  { code: 'IN', name: 'India (INR)' },
+  { code: 'CA', name: 'Canada (CAD)' },
+  { code: 'GB', name: 'United Kingdom (GBP)' },
+  { code: 'AU', name: 'Australia (AUD)' },
+  { code: 'EU', name: 'Europe (EUR)' },
+  { code: 'AE', name: 'United Arab Emirates (AED)' },
+  { code: 'BR', name: 'Brazil (BRL)' },
+  { code: 'DE', name: 'Germany (EUR)' },
+  { code: 'FR', name: 'France (EUR)' },
+  { code: 'JP', name: 'Japan (JPY)' },
+  { code: 'NG', name: 'Nigeria (NGN)' },
+  { code: 'ZA', name: 'South Africa (ZAR)' },
+];
+
+function createCountryPriceEntry(code = '', price = '') {
+  return { id: Date.now() + Math.random(), code, price };
+}
 
 export default function ProductUpload({ isOpen, onClose, onSuccess }) {
   const [title, setTitle] = useState('');
@@ -23,6 +43,8 @@ export default function ProductUpload({ isOpen, onClose, onSuccess }) {
   const [pages, setPages] = useState('');
   const [format, setFormat] = useState('Digital PDF');
   const [features, setFeatures] = useState(['', '', '']);
+  const [countryPrices, setCountryPrices] = useState([]);
+  const [locationPricingOpen, setLocationPricingOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -42,6 +64,8 @@ export default function ProductUpload({ isOpen, onClose, onSuccess }) {
       setPages('');
       setFormat('Digital PDF');
       setFeatures(['', '', '']);
+      setCountryPrices([]);
+      setLocationPricingOpen(false);
       setError('');
     }
   }, [isOpen]);
@@ -71,6 +95,21 @@ export default function ProductUpload({ isOpen, onClose, onSuccess }) {
     return data.imageUrl;
   };
 
+  // ── Country price handlers ──────────────────────────────────────
+  const addCountryPrice = () => {
+    setCountryPrices((prev) => [...prev, createCountryPriceEntry()]);
+  };
+
+  const removeCountryPrice = (id) => {
+    setCountryPrices((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const updateCountryPrice = (id, field, value) => {
+    setCountryPrices((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -90,11 +129,20 @@ export default function ProductUpload({ isOpen, onClose, onSuccess }) {
         setUploading(false);
       }
 
+      // Convert countryPrices array to object for the API
+      const countryPricesObj = {};
+      countryPrices.forEach((item) => {
+        if (item.code && item.price !== '' && Number(item.price) > 0) {
+          countryPricesObj[item.code] = Number(item.price);
+        }
+      });
+
       const payload = {
         title: title.trim(),
         description: description.trim(),
         fullDescription: fullDescription.trim() || description.trim(),
         price: Number(price),
+        countryPrices: Object.keys(countryPricesObj).length > 0 ? countryPricesObj : undefined,
         category,
         coverImage,
         pages: Number(pages) || 0,
@@ -317,6 +365,95 @@ export default function ProductUpload({ isOpen, onClose, onSuccess }) {
                       + Add another feature
                     </button>
                   </div>
+                </div>
+
+                {/* Location-Based Pricing */}
+                <div className="rounded-2xl border border-espresso/10 bg-white/40">
+                  <button
+                    type="button"
+                    onClick={() => setLocationPricingOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-espresso hover:bg-white/50 transition-colors rounded-2xl"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Globe size={16} className="text-gold" />
+                      Location-Based Pricing
+                    </span>
+                    {locationPricingOpen ? (
+                      <ChevronUp size={16} className="text-secondary" />
+                    ) : (
+                      <ChevronDown size={16} className="text-secondary" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {locationPricingOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 space-y-3">
+                          <p className="text-xs text-secondary">
+                            Set country-specific prices. If a country isn't listed, the default price will be used.
+                          </p>
+
+                          {countryPrices.length === 0 && (
+                            <div className="py-6 text-center text-xs text-secondary bg-cream/50 rounded-xl">
+                              No location prices set. Click "Add Location" to add one.
+                            </div>
+                          )}
+
+                          {countryPrices.map((entry) => (
+                            <div key={entry.id} className="flex items-center gap-3">
+                              <select
+                                value={entry.code}
+                                onChange={(e) => updateCountryPrice(entry.id, 'code', e.target.value)}
+                                className="flex-1 rounded-xl border border-espresso/15 bg-white px-3 py-2.5 text-sm text-espresso focus:outline-none focus:border-gold/50 transition-colors appearance-none cursor-pointer"
+                              >
+                                <option value="" disabled>Select country</option>
+                                {ALL_COUNTRIES.filter(
+                                  (c) => c.code === entry.code || !countryPrices.some((cp) => cp.code === c.code && cp.id !== entry.id)
+                                ).map((c) => (
+                                  <option key={c.code} value={c.code}>
+                                    {c.name}
+                                  </option>
+                                ))}
+                              </select>
+
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={entry.price}
+                                onChange={(e) => updateCountryPrice(entry.id, 'price', e.target.value)}
+                                placeholder="Price"
+                                className="w-28 rounded-xl border border-espresso/15 bg-white px-3 py-2.5 text-sm text-espresso placeholder-secondary/40 focus:outline-none focus:border-gold/50 transition-colors"
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => removeCountryPrice(entry.id)}
+                                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                                title="Remove location"
+                              >
+                                <X size={15} />
+                              </button>
+                            </div>
+                          ))}
+
+                          <button
+                            type="button"
+                            onClick={addCountryPrice}
+                            className="flex items-center gap-2 text-xs text-gold font-medium hover:text-espresso transition-colors pt-1"
+                          >
+                            <Plus size={14} /> Add Location
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* File URL (optional) */}

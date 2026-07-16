@@ -6,7 +6,7 @@ import User from '../models/User.model.js';
 export const getAllCourses = async (req, res) => {
   try {
     const courses = await Course.find({ isPublished: true })
-      .select('title slug shortDescription description price thumbnail coverImage totalDays enrollmentCount content')
+      .select('title slug shortDescription description price countryPrices thumbnail coverImage totalDays enrollmentCount content')
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, courses });
@@ -18,7 +18,7 @@ export const getAllCourses = async (req, res) => {
 export const getAdminCourses = async (req, res) => {
   try {
     const courses = await Course.find()
-      .select('title slug shortDescription description price thumbnail coverImage totalDays enrollmentCount content')
+      .select('title slug shortDescription description price countryPrices thumbnail coverImage totalDays enrollmentCount content')
       .sort({ createdAt: -1 })
       .lean();
     res.json({ success: true, courses });
@@ -71,10 +71,20 @@ export const getCourse = async (req, res) => {
 
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, shortDescription, price, thumbnail, content } = req.body;
+    const { title, description, shortDescription, price, countryPrices, thumbnail, content } = req.body;
 
     if (!title || !description || price === undefined) {
       return res.status(400).json({ success: false, message: 'Title, description, and price are required' });
+    }
+
+    // Parse countryPrices if provided (convert plain object to Map-friendly format)
+    const parsedCountryPrices = {};
+    if (countryPrices && typeof countryPrices === 'object') {
+      for (const [code, val] of Object.entries(countryPrices)) {
+        if (code && val !== undefined && val !== null && val !== '') {
+          parsedCountryPrices[code] = Number(val);
+        }
+      }
     }
 
     const payload = {
@@ -82,6 +92,7 @@ export const createCourse = async (req, res) => {
       description,
       shortDescription: shortDescription || '',
       price: Number(price),
+      countryPrices: Object.keys(parsedCountryPrices).length > 0 ? parsedCountryPrices : {},
       thumbnail: thumbnail || '',
       coverImage: thumbnail || '',
       isPublished: true,
@@ -107,6 +118,16 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     const payload = { ...req.body };
+    // Parse countryPrices if provided
+    if (payload.countryPrices && typeof payload.countryPrices === 'object') {
+      const parsed = {};
+      for (const [code, val] of Object.entries(payload.countryPrices)) {
+        if (code && val !== undefined && val !== null && val !== '') {
+          parsed[code] = Number(val);
+        }
+      }
+      payload.countryPrices = Object.keys(parsed).length > 0 ? parsed : {};
+    }
     if (payload.content) {
       payload.content = payload.content.filter((item) => item?.title || item?.audioUrl || item?.pdfUrl).map((item) => ({
         title: item.title || 'Lesson Content',
@@ -143,10 +164,20 @@ export const initiatePurchase = async (req, res) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
-    const alreadyPurchased = (user.purchasedCourses || []).some((purchase) => purchase.courseId?.toString() === courseId);
-    if (alreadyPurchased) {
+    // Only block if there's a COMPLETED purchase (paid or fully captured).
+    // Allow retry if the previous attempt was only 'pending' (user didn't complete payment).
+    const completedPurchase = (user.purchasedCourses || []).some((purchase) =>
+      purchase.courseId?.toString() === courseId &&
+      (Number(purchase.amountPaid || 0) > 0 || purchase.paymentStatus === 'completed')
+    );
+    if (completedPurchase) {
       return res.status(400).json({ success: false, message: 'Course already purchased' });
     }
+
+    // Remove any stale pending records for this course (from previous failed attempts)
+    user.purchasedCourses = (user.purchasedCourses || []).filter(
+      (purchase) => purchase.courseId?.toString() !== courseId
+    );
 
     const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 

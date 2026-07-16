@@ -27,8 +27,8 @@ export default function About() {
   return (
     <main className="pt-20 overflow-hidden">
       {/* Hero */}
-      <section className="py-28 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="py-28 px-6 ">
+        <div className="max-w-4xl mx-auto text-center  bg-cream/65 backdrop-blur-[6px] rounded-luxury luxury-border p-12">
           <AnimSection>
             <p className="text-label text-gold mb-4">Our Story</p>
             <h1
@@ -74,6 +74,41 @@ export default function About() {
               <p>
                 EmbracingHigherSelf is the culmination of that journey: a thoughtfully crafted platform where ancient wisdom meets modern practice, and where every individual is met exactly where they are.
               </p>
+            </div>
+          </AnimSection>
+        </div>
+      </section>
+
+      <section className="py-20 bg-gradient-section ">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center  ">
+          
+          <AnimSection className="max-md:order-2">
+            <p className="text-label text-gold mb-4">Founder's Journey</p>
+            <h2
+              className="font-boska text-4xl text-espresso mb-6"
+              style={{ fontFamily: 'Boska, Georgia, serif' }}
+            >
+              From Searching to Becoming
+            </h2>
+            <div className="space-y-4 text-secondary leading-relaxed">
+              <p>
+                After years of searching for meaning, purpose, and genuine transformation, our founder discovered the profound power of intentional manifestation — not as a mystical concept, but as a grounded, practical science of the mind and soul.
+              </p>
+              <p>
+                What began as a personal practice became a calling. A calling to share these tools with every soul who feels the quiet pull toward something greater — toward the life they know, deep down, they were meant to live.
+              </p>
+              <p>
+                EmbracingHigherSelf is the culmination of that journey: a thoughtfully crafted platform where ancient wisdom meets modern practice, and where every individual is met exactly where they are.
+              </p>
+            </div>
+          </AnimSection>
+          <AnimSection className="max-md:order-1">
+            <div className="overflow-hidden rounded-luxury-lg ">
+              <img
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop&q=60"
+                alt="Founder"
+                className="w-full h-[500px] object-cover img-sepia"
+              />
             </div>
           </AnimSection>
         </div>

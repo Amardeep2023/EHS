@@ -23,7 +23,7 @@ export async function register(req, res) {
 
     const user = await User.create({ name, email, password });
     const token = signToken(user._id);
-    res.status(201).json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.status(201).json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role, country: user.country } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -37,7 +37,7 @@ export async function login(req, res) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
     const token = signToken(user._id);
-    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.json({ success: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role, country: user.country } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -63,7 +63,7 @@ export async function googleAuth(req, res) {
     });
 
     const payload = ticket.getPayload();
-    const { sub: googleId, email, name, picture: avatar } = payload;
+    const { sub: googleId, email, name, picture: avatar, locale } = payload;
 
     // Check if user exists or create new
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
@@ -89,12 +89,14 @@ export async function googleAuth(req, res) {
     res.json({
       success: true,
       token: authToken,
+      locale: locale || null,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        country: user.country,
         purchasedCourses: user.purchasedCourses,
       },
     });
@@ -118,6 +120,10 @@ export async function getMe(req, res) {
     for (const purchase of user.purchasedCourses || []) {
       const courseId = purchase.courseId?.toString?.() || purchase.courseId;
       if (!courseId) continue;
+
+      // Only include fully paid / completed purchases — skip stale pending records
+      const isPaid = Number(purchase.amountPaid || 0) > 0 || purchase.paymentStatus === 'completed';
+      if (!isPaid) continue;
 
       const course = await Course.findById(courseId).select('title price thumbnail slug').lean();
       if (!course) continue;
@@ -155,6 +161,34 @@ export async function updateProfile(req, res) {
     const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
 
     res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+/**
+ * Update user's selected country
+ * @route PATCH /api/auth/country
+ */
+export async function updateCountry(req, res) {
+  try {
+    const { country } = req.body;
+
+    if (!country || typeof country !== 'string' || country.length > 10) {
+      return res.status(400).json({ success: false, message: 'Invalid country code' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { country: country.toUpperCase() },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, country: user.country });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

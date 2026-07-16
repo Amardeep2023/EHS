@@ -18,6 +18,11 @@ const courseSchema = new mongoose.Schema(
     description: { type: String, required: true },
     shortDescription: { type: String, default: '' },
     price: { type: Number, required: true },
+    countryPrices: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
     thumbnail: { type: String, default: '' },
     coverImage: { type: String, default: '' },
     totalDays: { type: Number, default: 1 },

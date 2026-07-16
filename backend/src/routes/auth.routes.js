@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, googleAuth, updateProfile } from '../controllers/auth.controller.js';
+import { register, login, getMe, googleAuth, updateProfile, updateCountry } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -9,5 +9,6 @@ router.post('/login', login);
 router.post('/google', googleAuth);
 router.get('/me', protect, getMe);
 router.patch('/profile', protect, updateProfile);
+router.patch('/country', protect, updateCountry);
 
 export default router;

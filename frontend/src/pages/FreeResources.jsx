@@ -82,7 +82,7 @@ export default function FreeResources() {
     <main className="pt-20 overflow-hidden">
       {/* Header */}
       <section className="py-28 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center  bg-cream/65 backdrop-blur-[6px] rounded-luxury luxury-border p-12">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { BookOpen, ShoppingBag, Calendar, Settings, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { resolveMediaUrl } from '../utils/media';
+import { getPriceForCourse, formatPrice } from '../utils/pricing';
+import { useCountryPricing } from '../context/CountryPricingContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('courses');
   const { user, token, logout, isLoggedIn, API_URL } = useAuth();
+  const { countryCode, countryData, showCountrySelector } = useCountryPricing();
   const navigate = useNavigate();
 
   // Courses are fetched exclusively from the backend via /auth/me
@@ -92,9 +95,33 @@ export default function Dashboard() {
       <div className="min-h-screen bg-cream flex items-center justify-center pt-20">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-espresso/20 border-t-espresso rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-espresso/60">Loading your dashboard...</p>
-        </div>
-      </div>
+          <p className="text-espresso/60">Loading your dashboard...</p>              </div>
+
+              {/* Country Badge */}
+              {countryCode && countryData && (
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={showCountrySelector}
+                    className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-espresso/10 hover:border-gold/30 transition-all group"
+                    title="Click to change country"
+                  >
+                    <span className="text-lg">
+                      {String.fromCodePoint(
+                        ...countryCode.split('').map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)
+                      )}
+                    </span>
+                    <div className="text-left">
+                      <p className="text-[10px] text-secondary/60 uppercase tracking-wider font-medium">Location</p>
+                      <p className="text-xs font-medium text-espresso flex items-center gap-1">
+                        {countryData.currency.symbol}{countryData.currency.code}
+                        <span className="text-secondary/40 text-[10px]">·</span>
+                        <span className="text-secondary/60">{countryCode}</span>
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
+          </div>
     );
   }
 
@@ -220,7 +247,7 @@ export default function Dashboard() {
                           </span>
                         )}
                       </div>
-                      <p className="text-secondary text-sm mb-4">Price: ${course.price}</p>
+                      <p className="text-secondary text-sm mb-4">Price: {formatPrice(getPriceForCourse(course, countryCode))}</p>
 
                       {/* Continue Learning Button */}
                       <button
@@ -461,9 +488,33 @@ export default function Dashboard() {
             </div>
           </motion.div>
         )}
+          </div>              </div>
+
+              {/* Country Badge */}
+              {countryCode && countryData && (
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={showCountrySelector}
+                    className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-espresso/10 hover:border-gold/30 transition-all group"
+                    title="Click to change country"
+                  >
+                    <span className="text-lg">
+                      {String.fromCodePoint(
+                        ...countryCode.split('').map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)
+                      )}
+                    </span>
+                    <div className="text-left">
+                      <p className="text-[10px] text-secondary/60 uppercase tracking-wider font-medium">Location</p>
+                      <p className="text-xs font-medium text-espresso flex items-center gap-1">
+                        {countryData.currency.symbol}{countryData.currency.code}
+                        <span className="text-secondary/40 text-[10px]">·</span>
+                        <span className="text-secondary/60">{countryCode}</span>
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
           </div>
-        </div>
-      </div>
     </div>
   );
 }

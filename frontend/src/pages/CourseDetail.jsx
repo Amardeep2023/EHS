@@ -5,6 +5,8 @@ import { ArrowLeft, Play, Pause, FileText, Headphones, Moon, Sun, ShoppingCart, 
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { resolveMediaUrl } from '../utils/media';
+import { getPriceForCourse, formatPrice, getCurrencySymbol } from '../utils/pricing';
+import { useCountryPricing } from '../context/CountryPricingContext';
 
 // ── Small reusable audio player ───────────────────────────────────
 function AudioPlayer({ src, label, icon: Icon, accent = 'gold' }) {
@@ -55,6 +57,7 @@ export default function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { token, API_URL, user } = useAuth();
+  const { countryCode, getPrice, formatPrice, currencySymbol } = useCountryPricing();
 
   const [course, setCourse] = useState(null);
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -173,7 +176,7 @@ export default function CourseDetail() {
                 <p className="text-label text-secondary">Students</p>
               </div>
               <div className="rounded-2xl bg-cream/70 p-4 text-center">
-                <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>${course.price}</p>
+                <p className="font-boska text-2xl text-espresso" style={{ fontFamily: 'Boska, Georgia, serif' }}>{formatPrice(getPrice(course))}</p>
                 <p className="text-label text-secondary">One-time</p>
               </div>
             </div>
@@ -201,7 +204,7 @@ export default function CourseDetail() {
                 disabled={purchasing}
                 className="inline-flex items-center gap-3 bg-espresso text-cream px-10 py-4 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300 disabled:opacity-60"
               >
-                <ShoppingCart size={16} /> Enroll Now — ${course.price}
+                <ShoppingCart size={16} /> Enroll Now — {formatPrice(getPrice(course))}
               </button>
             </div>
 

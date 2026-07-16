@@ -3,6 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, Download, Check, FileText, BookOpen, Sparkles, Loader } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useCountryPricing } from '../context/CountryPricingContext';
+import { getPriceForProduct, formatPrice } from '../utils/pricing';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -10,11 +13,13 @@ export default function ProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { countryCode } = useCountryPricing();
 
   // Scroll to top on mount and when productId changes
   useEffect(() => {
@@ -183,18 +188,26 @@ export default function ProductDetail() {
               </div>
 
               {/* Price & CTA */}
-              <div className="flex items-center gap-5">
-                <span
-                  className="font-boska text-4xl text-espresso"
-                  style={{ fontFamily: 'Boska, Georgia, serif' }}
-                >
-                  ${product.price}
-                </span>
-                <button className="inline-flex items-center gap-2 bg-espresso text-cream px-8 py-3.5 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300">
-                  <ShoppingBag size={16} /> Purchase — ${product.price}
-                </button>
+              <div className="space-y-3">
+                <div className="flex items-center gap-5">
+                  <span
+                    className="font-boska text-4xl text-espresso"
+                    style={{ fontFamily: 'Boska, Georgia, serif' }}
+                  >
+                    {formatPrice(getPriceForProduct(product, countryCode), countryCode)}
+                  </span>
+                  <button
+                    onClick={() => addItem(product)}
+                    className="inline-flex items-center gap-2 border-2 border-espresso/20 text-espresso px-6 py-3 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso hover:border-gold transition-all duration-300"
+                  >
+                    <ShoppingBag size={14} /> Add to Cart
+                  </button>
+                  <button className="inline-flex items-center gap-2 bg-espresso text-cream px-8 py-3.5 rounded-full text-sm font-medium hover:bg-gold hover:text-espresso transition-all duration-300">
+                    <ShoppingBag size={16} /> Purchase — {formatPrice(getPriceForProduct(product, countryCode), countryCode)}
+                  </button>
+                </div>
+                <p className="text-xs text-secondary">Secure checkout. Instant access after purchase.</p>
               </div>
-              <p className="text-xs text-secondary mt-3">Secure checkout. Instant access after purchase.</p>
             </motion.div>
           </div>
         </div>
@@ -312,7 +325,7 @@ export default function ProductDetail() {
                         className="font-boska text-xl text-gold"
                         style={{ fontFamily: 'Boska, Georgia, serif' }}
                       >
-                        ${related.price}
+                        {formatPrice(getPriceForProduct(related, countryCode), countryCode)}
                       </span>
                     </div>
                   </motion.div>

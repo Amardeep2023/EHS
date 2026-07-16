@@ -13,6 +13,7 @@ import productRoutes from './routes/product.routes.js';
 import resourceRoutes from './routes/resource.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import consultationRoutes from './routes/consultation.routes.js';
+import cartRoutes from './routes/cart.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
 // ── Connect to MongoDB ─────────────────────────────────────────
@@ -38,6 +39,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/consultations', consultationRoutes);
+app.use('/api/cart', cartRoutes);
 
 app.use('/api/admin', adminRoutes);
 
