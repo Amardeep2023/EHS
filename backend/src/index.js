@@ -29,7 +29,9 @@ const __dirname = path.dirname(__filename);
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   process.env.RENDER_FRONTEND_URL || 'http://localhost:5173',
+  process.env.VERCEL_FRONTEND_URL || 'https://ehs-three.vercel.app',
   'https://ehs-0ze5.onrender.com', // Render frontend URL (if deployed separately)
+  'https://ehs-three.vercel.app', // Vercel frontend URL
 ];
 
 app.use(cors({ 

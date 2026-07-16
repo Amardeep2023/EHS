@@ -90,8 +90,8 @@ export const createBooking = async (req, res) => {
     }
     
     // Create PayPal order
-    // Support both localhost and Render URLs
-    const frontendUrl = process.env.FRONTEND_URL || process.env.RENDER_FRONTEND_URL || 'http://localhost:5173';
+    // Support localhost, Render, and Vercel frontend URLs
+    const frontendUrl = process.env.FRONTEND_URL || process.env.RENDER_FRONTEND_URL || process.env.VERCEL_FRONTEND_URL || 'http://localhost:5173';
     const returnUrl = `${frontendUrl}/payment-success?consultationId=${consultation._id}`;
     const cancelUrl = `${frontendUrl}/payment-cancel?consultationId=${consultation._id}`;
     

@@ -46,8 +46,10 @@ router.post('/create', protect, async (req, res) => {
     await booking.save();
 
     // Create PayPal order
-    const returnUrl = `${process.env.FRONTEND_URL}/payment/success?bookingId=${booking._id}`;
-    const cancelUrl = `${process.env.FRONTEND_URL}/payment/cancel?bookingId=${booking._id}`;
+    // Support localhost, Render, and Vercel frontend URLs
+    const frontendUrl = process.env.FRONTEND_URL || process.env.RENDER_FRONTEND_URL || process.env.VERCEL_FRONTEND_URL || 'http://localhost:5173';
+    const returnUrl = `${frontendUrl}/payment/success?bookingId=${booking._id}`;
+    const cancelUrl = `${frontendUrl}/payment/cancel?bookingId=${booking._id}`;
     
     const paypalOrder = await paypalService.createOrder(
       amount,
