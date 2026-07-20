@@ -1,13 +1,11 @@
 {
   "buildCommand": "npm run build",
   "framework": "vite",
-  "env": [
-    
-  ],
+  "env": {},
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ehs-0ze5.onrender.com/api/:path*"
+      "destination": "/api/:path*"
     }
   ]
 }
