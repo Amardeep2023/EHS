@@ -177,7 +177,7 @@ export default function Dashboard() {
           {/* Vertical Sidebar */}
           <aside className="md:w-56 flex-shrink-0">
             <div className="bg-white rounded-luxury luxury-border overflow-hidden sticky top-28">
-              <nav className="p-3 space-y-1">
+              <nav className="p-10 space-y-5">
                 {[
                   { id: 'courses', label: 'My Courses', icon: BookOpen },
                   { id: 'sessions', label: 'My Sessions', icon: Calendar },

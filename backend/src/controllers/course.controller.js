@@ -128,6 +128,10 @@ export const updateCourse = async (req, res) => {
       }
       payload.countryPrices = Object.keys(parsed).length > 0 ? parsed : {};
     }
+    // Keep coverImage in sync with thumbnail
+    if (payload.thumbnail) {
+      payload.coverImage = payload.thumbnail;
+    }
     if (payload.content) {
       payload.content = payload.content.filter((item) => item?.title || item?.audioUrl || item?.pdfUrl).map((item) => ({
         title: item.title || 'Lesson Content',

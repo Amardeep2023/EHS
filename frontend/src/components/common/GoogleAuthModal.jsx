@@ -157,7 +157,7 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess }) {
             className="fixed mx-96 my-36 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl p-8"
+              className=" bg-cream/65 backdrop-blur-[6px] rounded-2xl shadow-2xl p-8"
               style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
             >
               {/* Header */}

@@ -75,7 +75,7 @@ export default function CourseDetail() {
         });
         const normalizedCourse = {
           ...res.data.course,
-          coverImage: resolveMediaUrl(res.data.course.coverImage || res.data.course.thumbnail || ''),
+          coverImage: resolveMediaUrl(res.data.course.thumbnail || res.data.course.coverImage || ''),
           includedItems: (res.data.course.content || []).map((item) => item.title),
           days: (res.data.course.content || []).map((item, index) => ({
             dayNumber: index + 1,

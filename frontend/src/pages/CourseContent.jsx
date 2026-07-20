@@ -199,7 +199,7 @@ export default function CourseContent() {
         const courseData = res.data.course;
         setCourse({
           ...courseData,
-          coverImage: resolveMediaUrl(courseData.coverImage || courseData.thumbnail || ''),
+          coverImage: resolveMediaUrl(courseData.thumbnail || courseData.coverImage || ''),
           days: (courseData.content || []).map((item, index) => ({
             dayNumber: index + 1,
             title: item.title,
